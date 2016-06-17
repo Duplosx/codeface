@@ -534,7 +534,7 @@ dispatch.all <- function(conf, repo.path, resdir) {
   dates <- sort(dates)
 
   ## Compute a list of intervals for the project release cycles
-  cycles <- get.cycles(conf, allow.empty.ranges=TRUE)
+  cycles <- data.frame() # get.cycles(conf, allow.empty.ranges=TRUE)
 
   if (nrow(cycles) != 0) {
     ## NOTE: We store the lubridate intervals in a list (instead of
@@ -558,12 +558,6 @@ dispatch.all <- function(conf, repo.path, resdir) {
     nonempty.release.intervals <- NULL
   }
 
-  ## Make release labels easier to read when automatically constructed
-  ## ranges are used
-  release.labels <- lapply(1:length(release.labels), function(i) {
-      return(gen.range.path(i, release.labels[[i]]))
-  })
-
   ## Obtain a unique numerical ID for the mailing list (and clear
   ## any existing results on the way)
   ml.id <- gen.clear.ml.id.con(conf$con, conf$listname, conf$pid)
@@ -573,6 +567,12 @@ dispatch.all <- function(conf, repo.path, resdir) {
   }
   else {
     logdevinfo("Analysing subsequences", logger="ml.analysis")
+
+    ## Make release labels easier to read when automatically constructed
+    ## ranges are used
+    release.labels <- lapply(1:length(release.labels), function(i) {
+      return(gen.range.path(i, release.labels[[i]]))
+    })
 
     ## Also obtain a clear plot for the mailing list activity
     activity.plot.name <- str_c(conf$listname, " activity")
