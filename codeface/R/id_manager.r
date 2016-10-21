@@ -20,12 +20,17 @@ suppressPackageStartupMessages(library(stringr))
 suppressPackageStartupMessages(library(rjson))
 source("config.r")
 
+## create global curl handle to maintain one connection to the ID service
+## over time (prevents too-many-connections errors)
+curl.handle = getCurlHandle()
+
 query.cache <- list()
 
 query.user.id.base <- function(host, port, pid, name, email) {
   res <- postForm(str_c("http://", host, ":", port, "/post_user_id"),
                   .params=list(projectID=pid, name=name, email=email),
-                  style="post", binary=FALSE, .encoding="utf-8")
+                  style="post", binary=FALSE, .encoding="utf-8",
+                  curl = curl.handle)
   response <- fromJSON(rawToChar(res))
   if (!is.null(response$error)) {
     logwarn(response$error)
@@ -51,10 +56,12 @@ query.user.id <- function(conf, name, email) {
                               conf$pid, name, email))
 }
 
+
 query.decompose.user.id.base <- function(host, port, pid, name.str) {
   res <- postForm(str_c("http://", host, ":", port, "/post_decompose_user_id"),
                   .params=list(projectID=pid, namestr=name.str),
-                  style="post", binary=FALSE, .encoding="utf-8")
+                  style="post", binary=FALSE, .encoding="utf-8",
+                  curl = curl.handle)
   response <- fromJSON(rawToChar(res))
   if (!is.null(response$error)) {
     logwarn(response$error)
