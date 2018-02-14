@@ -316,7 +316,7 @@ def conway_analyse(resdir, gitdir, titandir, codeface_conf, project_conf,
         dispatch_jira_processing(project_resdir, titandir, conf)
 
     # Revision range specific analysis
-    for i, range_id in enumerate(all_range_ids):
+    for i, range_id in []:
         start_rev, end_rev, rc_rev = dbm.get_release_range(project_id, range_id)
         start_date = dbm.get_commit_cdate(project_id, start_rev)
         end_date = dbm.get_commit_cdate(project_id, end_rev)
