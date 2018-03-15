@@ -52,7 +52,7 @@ PATH_GITHUBWRAPPER =  os.path.join(PATH_ROOT, "GitHubWrapper")
 PATH_BENCHBUILD = os.path.join(PATH_ROOT, "benchbuild")
 PATH_CONTAINER = os.path.join(PATH_ROOT, "container")
 #PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2016-11-03_codeface.tar.bz2")
-PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2017-12-05_codeface.tar.bz2")
+PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2018-03-02_codeface.tar.bz2")
 # PATH_CONTAINER_UBUNTU = os.path.join(PATH_BENCHBUILD, "results", "codeface.oNm0L7r9", "container-in")
 
 
@@ -149,7 +149,7 @@ for configuration in configurations:
     CASESTUDY = configuration[0]
 
     # construct case-study-dependent parameters
-    CONF_CODEFACE = os.path.join(CODEFACE_DATA_CONF, "codeface_{}.conf".format(SELECTION_PROCESS))
+    CONF_CODEFACE = os.path.join(CODEFACE_DATA_CONF, "codeface_{}_dvorak.conf".format(SELECTION_PROCESS))
     CONF_CASESTUDY = os.path.join(CODEFACE_DATA_CONF_CHUNK, "{}_{}.conf".format(configuration[0], configuration[1]))
     LOG_FILE_SLURM = os.path.join(CODEFACE_DATA_LOGS, get_configuration_name(configuration, chunk = SELECTION_PROCESS) + ".log")
     LOG_PATH_CODEFACE = os.path.join(CODEFACE_DATA_LOGS_CONTAINER, get_configuration_name(configuration, chunk = SELECTION_PROCESS))
