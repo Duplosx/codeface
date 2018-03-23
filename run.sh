@@ -41,26 +41,32 @@ pushd ${DIR} > /dev/null
         ## run codeface analysis with current tagging set
         codeface -j 11 -l "devinfo" run --recreate -c ${CFCONF} -p ${CSCONF} ${RESULTS} ${REPOS} > ${LOGS}/codeface_run.log 2>&1
 
-        ## run mailing-list analysis (attached to feature/proximity analysis!)
-        # codeface -j 2 -l "devinfo" ml -c ${CFCONF} -p ${CSCONF} "${RESULTS}" "${MAILINGLISTS}" > ${LOGS}/codeface_ml.log 2>&1
-        codeface -j 11 -l "devinfo" ml --use-corpus -c ${CFCONF} -p ${CSCONF} "${RESULTS}" "${MAILINGLISTS}" > ${LOGS}/codeface_ml.log 2>&1
+        # ## run mailing-list analysis (attached to feature/proximity analysis!)
+        # codeface -j 11 -l "devinfo" ml -c ${CFCONF} -p ${CSCONF} "${RESULTS}" "${MAILINGLISTS}" > ${LOGS}/codeface_ml.log 2>&1
+        # codeface -j 11 -l "devinfo" ml --use-corpus -c ${CFCONF} -p ${CSCONF} "${RESULTS}" "${MAILINGLISTS}" > ${LOGS}/codeface_ml.log 2>&1
 
-        ## run GitHubWrapper extraction
-        java -Xmx8G -jar ${CFGHW} ${CASESTUDY} ${RESULTS} ${REPOS} "${CFDATA}/configurations/tokens/tokens.txt"
+        # ## run GitHubWrapper extraction
+        # java -Xmx100G -jar ${CFGHW} ${CASESTUDY} ${RESULTS} ${REPOS} "${CFDATA}/configurations/tokens.txt" > ${LOGS}/codeface_githubwrapper.log 2>&1
 
-        # run extraction process for this configuration
+        ## run extraction process for this configuration
         pushd "${CFEXTRACT}" > /dev/null
-            ISSUEPROCESS="${CFEXTRACT}/run-issues.py"
-            python ${ISSUEPROCESS} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_issues.log 2>&1
+            # ISSUEPROCESS="${CFEXTRACT}/run-issues.py"
+            # python ${ISSUEPROCESS} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_issues.log 2>&1
 
             EXTRACTION="${CFEXTRACT}/run-extraction.py"
             python ${EXTRACTION} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_extraction.log 2>&1
 
-            MBOXPARSING="${CFEXTRACT}/run-parsing.py"
-            # MboxParsing without filepath
-            python ${MBOXPARSING} -c ${CFCONF} -p ${CSCONF} ${RESULTS} ${MAILINGLISTS} > ${LOGS}/codeface_mbox_parsing.log 2>&1
-            # MboxParsing with filepath
-            python ${MBOXPARSING} -c ${CFCONF} -p ${CSCONF} -f ${RESULTS} ${MAILINGLISTS} > ${LOGS}/codeface_mbox_parsing.log 2>&1
+            # MBOXPARSING="${CFEXTRACT}/run-parsing.py"
+            # ## Remove already existing log file to be able to append later
+            # rm ${LOGS}/codeface_mbox_parsing.log
+            # ## MboxParsing without filepath
+            # python ${MBOXPARSING} -c ${CFCONF} -p ${CSCONF} ${RESULTS} ${MAILINGLISTS} >> ${LOGS}/codeface_mbox_parsing.log 2>&1
+            # ## MboxParsing with filepath
+            # python ${MBOXPARSING} -c ${CFCONF} -p ${CSCONF} -f ${RESULTS} ${MAILINGLISTS} >> ${LOGS}/codeface_mbox_parsing.log 2>&1
+            # ## MboxParsing file (base name only)
+            # python ${MBOXPARSING} -c ${CFCONF} -p ${CSCONF} --file ${RESULTS} ${MAILINGLISTS} >> ${LOGS}/codeface_mbox_parsing.log 2>&1
+            # ## MboxParsing file with filepath
+            # python ${MBOXPARSING} -c ${CFCONF} -p ${CSCONF} --file -f ${RESULTS} ${MAILINGLISTS} >> ${LOGS}/codeface_mbox_parsing.log 2>&1
         popd
 
         ## stop ID service
