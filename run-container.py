@@ -52,7 +52,7 @@ PATH_GITHUBWRAPPER =  os.path.join(PATH_ROOT, "GitHubWrapper")
 PATH_BENCHBUILD = os.path.join(PATH_ROOT, "benchbuild")
 PATH_CONTAINER = os.path.join(PATH_ROOT, "container")
 #PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2016-11-03_codeface.tar.bz2")
-PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2018-03-02_codeface.tar.bz2")
+PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2018-03-24_codeface.tar.bz2")
 # PATH_CONTAINER_UBUNTU = os.path.join(PATH_BENCHBUILD, "results", "codeface.oNm0L7r9", "container-in")
 
 

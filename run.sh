@@ -25,6 +25,7 @@ pushd ${DIR} > /dev/null
     CFDATA="/mnt/codeface-data"
     CFEXTRACT="/mnt/codeface-extraction"
     CFGHW="/mnt/GitHubWrapper/build/libs/GitHubGitWrapper-1.0.jar"
+    TITAN="${CFDIR}/titan"
 
     ## create log folder
     mkdir -p ${LOGS}
@@ -45,6 +46,9 @@ pushd ${DIR} > /dev/null
         # codeface -j 11 -l "devinfo" ml -c ${CFCONF} -p ${CSCONF} "${RESULTS}" "${MAILINGLISTS}" > ${LOGS}/codeface_ml.log 2>&1
         # codeface -j 11 -l "devinfo" ml --use-corpus -c ${CFCONF} -p ${CSCONF} "${RESULTS}" "${MAILINGLISTS}" > ${LOGS}/codeface_ml.log 2>&1
 
+        # ## run conway analysis (do NOT give -j paramater, it may break the analysis!)
+        # codeface -l "devinfo" conway -c ${CFCONF} -p ${CSCONF} "${RESULTS}" ${REPOS} ${TITAN} > ${LOGS}/codeface_conway.log 2>&1
+
         # ## run GitHubWrapper extraction
         # java -Xmx100G -jar ${CFGHW} ${CASESTUDY} ${RESULTS} ${REPOS} "${CFDATA}/configurations/tokens.txt" > ${LOGS}/codeface_githubwrapper.log 2>&1
 
@@ -52,6 +56,9 @@ pushd ${DIR} > /dev/null
         pushd "${CFEXTRACT}" > /dev/null
             # ISSUEPROCESS="${CFEXTRACT}/run-issues.py"
             # python ${ISSUEPROCESS} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_issues.log 2>&1
+
+            # ISSUEPROCESS="${CFEXTRACT}/run-jira-issues.py"
+            # python ${ISSUEPROCESS} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_issues_jira.log 2>&1
 
             EXTRACTION="${CFEXTRACT}/run-extraction.py"
             python ${EXTRACTION} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_extraction.log 2>&1
