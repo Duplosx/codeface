@@ -42,7 +42,7 @@ PATH_ROOT = "/scratch/codeface"
 
 # Codeface
 PATH_ANALYSIS = os.path.join(PATH_ROOT, "codeface")
-PATH_ANALYSIS_SCRIPT = "run.sh" # "run_test.sh"
+PATH_ANALYSIS_SCRIPT = "run.sh"  # "run.sh" "run_conway.sh" "run_ghw.sh" "run_mail.sh"
 
 # Codeface extraction
 PATH_CODEFACE_EXTRACTION = os.path.join(PATH_ROOT, "codeface-extraction")
@@ -52,7 +52,8 @@ PATH_GITHUBWRAPPER =  os.path.join(PATH_ROOT, "GitHubWrapper")
 PATH_BENCHBUILD = os.path.join(PATH_ROOT, "benchbuild")
 PATH_CONTAINER = os.path.join(PATH_ROOT, "container")
 #PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2016-11-03_codeface.tar.bz2")
-PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2018-03-24_codeface.tar.bz2")
+#PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2018-03-24_codeface.tar.bz2")
+PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2018-08-02_codeface.tar.bz2")
 # PATH_CONTAINER_UBUNTU = os.path.join(PATH_BENCHBUILD, "results", "codeface.oNm0L7r9", "container-in")
 
 
@@ -61,8 +62,10 @@ PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2018-03-24_codeface.tar.
 #
 
 # node
-CH_SLURM_ENV = ["-p", "anywhere", "-A", "anywhere", "--exclusive", "--mem=0", "--qos=verylong", "--time=0", "--constraint=zeus"]
+#CH_SLURM_ENV = ["-p", "anywhere", "-A", "anywhere", "--exclusive", "--mem=0", "--qos=verylong", "--time=0", "--constraint=zeus|chimaira|pontipine|cayman"]
+#CH_SLURM_ENV = ["-p", "anywhere", "-A", "anywhere", "--exclusive", "--mem=0", "--constraint=zeus|chimaira"]
 #CH_SLURM_ENV = ["-p", "sphinx", "-A", "sphinx", "--exclusive"]
+CH_SLURM_ENV = ["-p", "anywhere", "-A", "anywhere", "--exclusive", "--mem=0", "--constraint=zeus|pontipine"]
 
 # notification email
 USER = "hunsen" # "bockthom" "hunsen"
@@ -84,26 +87,45 @@ CH_SLURM_MAIL = ["--mail-type=END", "--mail-user=" + CH_MAIL]
 
 # list of casestudies
 CASESTUDIES = [
-#    "busybox",
-#    "openssl",
-#    "sqlite",
-#    "firefox",
-#    "test",
-#    "testmail",
-#    "libressl",
-#    "jailhouse",
 #    "apache-http",
-#    "git",
-    "chromium",
+#    "busybox",
 #    "django",
 #    "ffmpeg",
+#    "flac",
 #    "gcc",
-#    "linux",
+#    "git",
+#    "jailhouse",
+#    "libressl",
 #    "llvm",
+#    "openssl",
 #    "postgres",
 #    "qemu",
+#    "sqlite",
 #    "uboot",
 #    "wine",
+
+
+## Huge projects
+#    "linux",
+#    "chromium",
+
+## Firefox
+#    "firefox",
+#     "firefox-beta",
+
+## Social and Organizational Change
+#     "owncloud",
+#     "qt",
+#     "qt5",
+#     "qt5-qtbase",
+#     "keras",
+#     "nodejs",
+
+## Testing
+#    "test",
+#    "testmail",
+#    "zeppelin",
+#    "google-data-transfer-project",
 ]
 
 TAGGING = [
@@ -112,7 +134,7 @@ TAGGING = [
 ]
 
 # selection process (one or more of: releases, threemonth, testing)
-SELECTION_PROCESS = "threemonth"
+SELECTION_PROCESS = "threemonth" #"threemonth" "releases" "testing"
 
 # construct all configurations
 configurations = [element for element in itertools.product(CASESTUDIES, TAGGING)]
@@ -197,3 +219,4 @@ for configuration in configurations:
         logging.info("-- command: {}".format(cmd))
         #cmd()  # (cmd > CH_SLURM_OUTPUT)()
         print(''.join(x for x in cmd() if x.isdigit()))
+
