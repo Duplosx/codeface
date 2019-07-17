@@ -50,6 +50,7 @@ pushd ${DIR} > /dev/null
         codeface -l "devinfo" conway -c ${CFCONF} -p ${CSCONF} "${RESULTS}" ${REPOS} ${TITAN} > ${LOGS}/codeface_conway.log 2>&1
 
         # ## run GitHubWrapper extraction
+        # mkdir -p "${RESULTS}/${CASESTUDY}_issues/"
         # java -Xmx100G -jar "${CFGHW}" \
         #     -dump "${RESULTS}/${CASESTUDY}_issues/issues.json" \
         #     -tokens "${CFDATA}/configurations/tokens.txt" \
