@@ -31,3 +31,8 @@ install:
   - integration-scripts/install_codeface_node.sh
 script:
   - integration-scripts/test_codeface.sh
+
+branches:
+  # blocklist
+  except:
+    - infosaar-chiemseer
