@@ -51,25 +51,24 @@ PATH_GITHUBWRAPPER =  os.path.join(PATH_ROOT, "GitHubWrapper")
 # benchbuild + uchroot container
 PATH_BENCHBUILD = os.path.join(PATH_ROOT, "benchbuild")
 PATH_CONTAINER = os.path.join(PATH_ROOT, "container")
-#PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2016-11-03_codeface.tar.bz2")
-#PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2018-03-24_codeface.tar.bz2")
-PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "2018-08-02_codeface.tar.bz2")
+#PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "saar_2018-08-02_codeface.tar.bz2")
+PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "saar_2020-04-19_bionic_codeface.tar.bz2")
 # PATH_CONTAINER_UBUNTU = os.path.join(PATH_BENCHBUILD, "results", "codeface.oNm0L7r9", "container-in")
 
+# local path for temporary directory for container
+PATH_LOCAL = os.path.join("/local", "storage", "slurm", "codeface")
 
 #
 # SLURM
 #
 
 # node
-#CH_SLURM_ENV = ["-p", "anywhere", "-A", "anywhere", "--exclusive", "--mem=0", "--qos=verylong", "--time=0", "--constraint=zeus|chimaira|pontipine|cayman"]
-#CH_SLURM_ENV = ["-p", "anywhere", "-A", "anywhere", "--exclusive", "--mem=0", "--constraint=zeus|chimaira"]
-#CH_SLURM_ENV = ["-p", "sphinx", "-A", "sphinx", "--exclusive"]
-CH_SLURM_ENV = ["-p", "anywhere", "-A", "anywhere", "--exclusive", "--mem=0", "--constraint=zeus|pontipine"]
+CH_SLURM_ENV = ["-p", "anywhere", "-A", "ls-apel", "--exclusive", "--mem=0"]
+#CH_SLURM_ENV = ["-p", "anywhere", "-A", "ls-apel", "--exclusive", "--mem=0", "--constraint=kine"]
 
 # notification email
-USER = "hunsen" # "bockthom" "hunsen"
-CH_MAIL = "{}@fim.uni-passau.de".format(USER)
+USER = "bockthom" # "bockthom" "hechtl"
+CH_MAIL = "{}@cs.uni-saarland.de".format(USER)
 
 # job parameters
 CH_SLURM_JOB_NAME = "codeface"
@@ -98,6 +97,8 @@ CASESTUDIES = [
 #    "libressl",
 #    "llvm",
 #    "openssl",
+#    "openssl-github",
+#    "owncloud-github",
 #    "postgres",
 #    "qemu",
 #    "sqlite",
@@ -110,7 +111,7 @@ CASESTUDIES = [
 #    "chromium",
 
 ## Firefox
-#    "firefox",
+#     "firefox",
 #     "firefox-beta",
 
 ## Social and Organizational Change
@@ -126,6 +127,7 @@ CASESTUDIES = [
 #    "testmail",
 #    "zeppelin",
 #    "google-data-transfer-project",
+#    "coronet"
 ]
 
 TAGGING = [
@@ -171,13 +173,13 @@ for configuration in configurations:
     CASESTUDY = configuration[0]
 
     # construct case-study-dependent parameters
-    CONF_CODEFACE = os.path.join(CODEFACE_DATA_CONF, "codeface_{}_dvorak.conf".format(SELECTION_PROCESS))
+    CONF_CODEFACE = os.path.join(CODEFACE_DATA_CONF, "codeface_{}_benediktiner.conf".format(SELECTION_PROCESS))
     CONF_CASESTUDY = os.path.join(CODEFACE_DATA_CONF_CHUNK, "{}_{}.conf".format(configuration[0], configuration[1]))
     LOG_FILE_SLURM = os.path.join(CODEFACE_DATA_LOGS, get_configuration_name(configuration, chunk = SELECTION_PROCESS) + ".log")
     LOG_PATH_CODEFACE = os.path.join(CODEFACE_DATA_LOGS_CONTAINER, get_configuration_name(configuration, chunk = SELECTION_PROCESS))
 
     # construct configuration-dependent parameters
-    TMP_FOLDER = tempfile.TemporaryDirectory(prefix = "codeface_container_", dir = "/local/codeface").name
+    TMP_FOLDER = tempfile.TemporaryDirectory(prefix = "codeface_container_", dir = PATH_LOCAL).name
 
     # sbatch wrapper
     sbatch = local["sbatch"][
