@@ -47,6 +47,7 @@ pushd ${DIR} > /dev/null
         # codeface -j 11 -l "devinfo" ml --use-corpus -c ${CFCONF} -p ${CSCONF} "${RESULTS}" "${MAILINGLISTS}" > ${LOGS}/codeface_ml.log 2>&1
 
         ## run conway analysis (do NOT give -j paramater, it may break the analysis!)
+        unset DISPLAY
         codeface -l "devinfo" conway -c ${CFCONF} -p ${CSCONF} "${RESULTS}" ${REPOS} ${TITAN} > ${LOGS}/codeface_conway.log 2>&1
 
         ## run GitHubWrapper extraction
