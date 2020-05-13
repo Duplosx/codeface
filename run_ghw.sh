@@ -39,6 +39,8 @@ pushd ${DIR} > /dev/null
             IDSERVICE=$!
         popd
 
+        # ## set stack size large enough to prevent C stack overflow errors
+        # ulimit -s 512000
         # ## run codeface analysis with current tagging set
         # codeface -j 11 -l "devinfo" run --recreate -c ${CFCONF} -p ${CSCONF} ${RESULTS} ${REPOS} > ${LOGS}/codeface_run.log 2>&1
 
