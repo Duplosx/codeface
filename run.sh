@@ -70,10 +70,17 @@ pushd ${DIR} > /dev/null
             python ${ISSUEPROCESS} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_issues_jira.log 2>&1
 
             EXTRACTION="${CFEXTRACT}/run-extraction.py"
+            ## Remove already existing backup folder (to be able to create a new backup in the author postprocessing step
+            CSTAGGING=$(basename ${CSCONF} .conf)
+            rm -rf "${RESULTS}/${CSTAGGING}/${CSTAGGING##*_}_bak/"
+
             python ${EXTRACTION} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_extraction.log 2>&1
             # add parameter '--range' to run extractions also for all ranges
             # add parameter '--implementation' to extract function implementations
             # add parameter '--commit-messages' to extract commit messages
+
+            AUTHORPOSTPROCESS="${CFEXTRACT}/run-author-postprocessing.py"
+            python ${AUTHORPOSTPROCESS} -c ${CFCONF} -p ${CSCONF} --backup ${RESULTS} > ${LOGS}/codeface_author_postprocessing.log 2>&1
 
             MBOXPARSING="${CFEXTRACT}/run-parsing.py"
             ## Remove already existing log file to be able to append later
