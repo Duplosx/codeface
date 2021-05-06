@@ -42,7 +42,7 @@ PATH_ROOT = "/scratch/codeface"
 
 # Codeface
 PATH_ANALYSIS = os.path.join(PATH_ROOT, "codeface")
-PATH_ANALYSIS_SCRIPT = "run.sh"  # "run.sh" "run_conway.sh" "run_ghw.sh" "run_mail.sh"
+PATH_ANALYSIS_SCRIPT = "run.sh"  # "run.sh" "run_conway.sh" "run_ghw.sh" "run_mail.sh" "run_disambig.sh"
 
 # Codeface extraction
 PATH_CODEFACE_EXTRACTION = os.path.join(PATH_ROOT, "codeface-extraction")
@@ -52,7 +52,7 @@ PATH_GITHUBWRAPPER =  os.path.join(PATH_ROOT, "GitHubWrapper")
 PATH_BENCHBUILD = os.path.join(PATH_ROOT, "benchbuild")
 PATH_CONTAINER = os.path.join(PATH_ROOT, "container")
 #PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "saar_2018-08-02_codeface.tar.bz2")
-PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "saar_2020-04-19_bionic_codeface.tar.bz2")
+PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "saar_2021-05-05_bionic_codeface.tar.bz2")
 # PATH_CONTAINER_UBUNTU = os.path.join(PATH_BENCHBUILD, "results", "codeface.oNm0L7r9", "container-in")
 
 # local path for temporary directory for container
@@ -87,8 +87,11 @@ CH_SLURM_MAIL = ["--mail-type=END", "--mail-user=" + CH_MAIL]
 # list of casestudies
 CASESTUDIES = [
 #    "apache-http",
+#    "buildroot",
 #    "busybox",
+#    "coreutils",
 #    "django",
+#    "dpdk",
 #    "ffmpeg",
 #    "flac",
 #    "gcc",
@@ -96,12 +99,16 @@ CASESTUDIES = [
 #    "jailhouse",
 #    "libressl",
 #    "llvm",
+#    "openembedded-core",
 #    "openssl",
 #    "openssl-github",
+#    "openvpn",
 #    "owncloud-github",
 #    "postgres",
+#    "ptxdist",
 #    "qemu",
 #    "sqlite",
+#    "tcl",
 #    "uboot",
 #    "wine",
 
@@ -122,11 +129,35 @@ CASESTUDIES = [
 #     "keras",
 #     "nodejs",
 
+## GitHub issue data
+#     "angular",
+#     "atom",
+#     "bootstrap",
+#     "deno",
+#     "electron",
+#     "flutter",
+#     "jquery",
+#     "kubernetes",
+#     "moby",
+#     "nextjs",
+#     "react",
+#     "redux",
+#     "revealjs",
+#     "tensorflow",
+#     "thefuck",
+#     "threejs",
+#     "typescript",
+#     "vscode",
+#     "vue",
+#     "webpack",
+
 ## Testing
 #    "test",
 #    "testmail",
 #    "zeppelin",
 #    "google-data-transfer-project",
+#    "codeface",
+#    "codeface-extraction",
 #    "coronet"
 ]
 

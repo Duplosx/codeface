@@ -54,7 +54,7 @@ pushd ${DIR} > /dev/null
 
         ## run GitHubWrapper extraction
         mkdir -p "${RESULTS}/${CASESTUDY}_issues/"
-        java -Xmx100G -jar "${CFGHW}" \
+        java -Xmx250G -Xss1G -jar "${CFGHW}" \
             -dump "${RESULTS}/${CASESTUDY}_issues/issues.json" \
             -tokens "${CFDATA}/configurations/tokens.txt" \
             -repo "${REPOS}/${CASESTUDY}/" \
