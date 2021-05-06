@@ -22,7 +22,7 @@ echo =================================================================
 echo
 
 # Enqueue a clean-up job (just in case the job fails)
-sbatch -Aanywhere -panywhere --cpus-per-task=1 --time=2 --nodelist=${SLURM_NODELIST} \
+sbatch -Als-apel -panywhere --cpus-per-task=1 --time=2 --nodelist=${SLURM_NODELIST} \
     /scratch/codeface/container/cleanup_node.bash
 
 

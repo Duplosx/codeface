@@ -54,7 +54,7 @@ pushd ${DIR} > /dev/null
 
         # ## run GitHubWrapper extraction
         # mkdir -p "${RESULTS}/${CASESTUDY}_issues/"
-        # java -Xmx100G -jar "${CFGHW}" \
+        # java -Xmx250G -Xss1G -jar "${CFGHW}" \
         #    -dump "${RESULTS}/${CASESTUDY}_issues/issues.json" \
         #    -tokens "${CFDATA}/configurations/tokens.txt" \
         #    -repo "${REPOS}/${CASESTUDY}/" \
@@ -72,7 +72,7 @@ pushd ${DIR} > /dev/null
             EXTRACTION="${CFEXTRACT}/run-extraction.py"
             ## Remove already existing backup folder (to be able to create a new backup in the author postprocessing step
             CSTAGGING=$(basename ${CSCONF} .conf)
-            rm -rf "${RESULTS}/${CSTAGGING}/${CSTAGGING##*_}_bak/"            
+            rm -rf "${RESULTS}/${CSTAGGING}/${CSTAGGING##*_}_bak/"
             python ${EXTRACTION} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_extraction.log 2>&1
             # add parameter '--range' to run extractions also for all ranges
             # add parameter '--implementation' to extract function implementations
