@@ -52,7 +52,7 @@ PATH_GITHUBWRAPPER =  os.path.join(PATH_ROOT, "GitHubWrapper")
 PATH_BENCHBUILD = os.path.join(PATH_ROOT, "benchbuild")
 PATH_CONTAINER = os.path.join(PATH_ROOT, "container")
 #PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "saar_2018-08-02_codeface.tar.bz2")
-PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "saar_2021-05-05_bionic_codeface.tar.bz2")
+PATH_CONTAINER_CODEFACE = os.path.join(PATH_CONTAINER, "saar_2021-05-22_bionic_codeface.tar.bz2")
 # PATH_CONTAINER_UBUNTU = os.path.join(PATH_BENCHBUILD, "results", "codeface.oNm0L7r9", "container-in")
 
 # local path for temporary directory for container
@@ -104,6 +104,7 @@ CASESTUDIES = [
 #    "openssl-github",
 #    "openvpn",
 #    "owncloud-github",
+#    "nextcloud",
 #    "postgres",
 #    "ptxdist",
 #    "qemu",
@@ -150,6 +151,34 @@ CASESTUDIES = [
 #     "vscode",
 #     "vue",
 #     "webpack",
+
+## Apache Projects with ML and JIRA data
+#     "activemq",
+#     "ambari",
+#     "apex",
+#     "camel",
+#     "cassandra",
+#     "couchdb",
+#     "geronimo",
+#     "groovy",
+#     "hadoop",
+#     "hbase",
+#     "hive",
+#     "ignite",
+#     "karaf",
+#     "kudu",
+#     "libcloud",
+#     "lucene-solr",
+#     "mahout",
+#     "mesos",
+#     "reef",
+#     "sentry",
+#     "spark",
+#     "subversion",
+#     "thrift",
+#     "trafficserver",
+#     "wicket",
+#     "zeppelin",
 
 ## Testing
 #    "test",
