@@ -25,6 +25,7 @@ pushd ${DIR} > /dev/null
     CFDATA="/mnt/codeface-data"
     CFEXTRACT="/mnt/codeface-extraction"
     CFGHW="/mnt/GitHubWrapper/build/libs/GitHubWrapper-1.0-SNAPSHOT.jar"
+    BODEGHA="/mnt/bodegha/bodegha"
     TITAN="${CFDIR}/titan"
 
     ## create log folder
@@ -60,6 +61,22 @@ pushd ${DIR} > /dev/null
         #     -repo "${REPOS}/${CASESTUDY}/" \
         #     -workDir "${REPOS}/" > ${LOGS}/codeface_githubwrapper.log 2>&1
 
+        # ## run BoDeGHa to identify bots on GitHub
+        # source "${BODEGHA}/bin/activate"
+        # pushd "${REPOS}/${CASESTUDY}/" > /dev/null
+        #     URL=$(git remote get-url origin)
+        #     URL_WITHOUT_SUFFIX=${URL%.*}
+        #     REPO_NAME=$(basename ${URL%.*})
+        #     REPO_ORGANIZATION=$(basename "${URL_WITHOUT_SUFFIX%/${REPO_NAME}}")
+        # popd
+        # TOKEN=$(tail -n 1 "${CFDATA}/configurations/tokens.txt")
+        # # TODO: start date?
+        # BODEGHA_COMMAND="bodegha ${REPO_ORGANIZATION}/${REPO_NAME} --verbose --key ${TOKEN} --csv --start-date 01-01-2009 --max-comments 2000"
+        # BODEGHA_LOG="${LOGS}/codeface_bodegha.log"
+        # echo ${BODEGHA_COMMAND} > ${BODEGHA_LOG}
+        # ${BODEGHA_COMMAND} 2>> ${BODEGHA_LOG} 1> "${RESULTS}/${CASESTUDY}_issues/bots.csv"
+        # deactivate
+
         ## run extraction process for this configuration
         pushd "${CFEXTRACT}" > /dev/null
             # ISSUEPROCESS="${CFEXTRACT}/run-issues.py"
@@ -67,6 +84,9 @@ pushd ${DIR} > /dev/null
 
             ISSUEPROCESS="${CFEXTRACT}/run-jira-issues.py"
             python ${ISSUEPROCESS} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_issues_jira.log 2>&1
+
+            # BOTSPROCESS="${CFEXTRACT}/run-bots.py"
+            # python ${BOTSPROCESS} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_bots.log 2>&1
 
             EXTRACTION="${CFEXTRACT}/run-extraction.py"
             ## Remove already existing backup folder (to be able to create a new backup in the author postprocessing step
