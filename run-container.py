@@ -42,11 +42,12 @@ PATH_ROOT = "/scratch/codeface"
 
 # Codeface
 PATH_ANALYSIS = os.path.join(PATH_ROOT, "codeface")
-PATH_ANALYSIS_SCRIPT = "run.sh"  # "run.sh" "run_conway.sh" "run_ghw.sh" "run_mail.sh" "run_disambig.sh"
+PATH_ANALYSIS_SCRIPT = "run.sh"  # "run.sh" "run_conway.sh" "run_ghw.sh" "run_mail.sh" "run_disambig.sh" "run_bots.sh"
 
 # Codeface extraction
 PATH_CODEFACE_EXTRACTION = os.path.join(PATH_ROOT, "codeface-extraction")
 PATH_GITHUBWRAPPER =  os.path.join(PATH_ROOT, "GitHubWrapper")
+PATH_BODEGHA = os.path.join(PATH_ROOT, "bodegha")
 
 # benchbuild + uchroot container
 PATH_BENCHBUILD = os.path.join(PATH_ROOT, "benchbuild")
@@ -259,6 +260,7 @@ for configuration in configurations:
                  "-m", "{}".format(PATH_CODEFACE_EXTRACTION),
                  "-m", "{}".format(CODEFACE_DATA), # FIXME write on cluster first, then sync result files
                  "-m", "{}".format(PATH_GITHUBWRAPPER),
+                 "-m", "{}".format(PATH_BODEGHA),
                  "-t", TMP_FOLDER,
                  "run",
                  "--",
