@@ -100,6 +100,9 @@ pushd ${DIR} > /dev/null
             AUTHORPOSTPROCESS="${CFEXTRACT}/run-author-postprocessing.py"
             python ${AUTHORPOSTPROCESS} -c ${CFCONF} -p ${CSCONF} --backup ${RESULTS} > ${LOGS}/codeface_author_postprocessing.log 2>&1
 
+            # ANONYMIZE="${CFEXTRACT}/run-anonymization.py"
+            # python ${ANONYMIZE} -c ${CFCONF} -p ${CSCONF} ${RESULTS} > ${LOGS}/codeface_anonymization.log 2>&1
+
             # MBOXPARSING="${CFEXTRACT}/run-parsing.py"
             # ## Remove already existing log file to be able to append later
             # rm ${LOGS}/codeface_mbox_parsing.log
