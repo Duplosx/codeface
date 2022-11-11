@@ -68,6 +68,11 @@ pushd ${DIR} > /dev/null
             URL_WITHOUT_SUFFIX=${URL%.*}
             REPO_NAME=$(basename ${URL%.*})
             REPO_ORGANIZATION=$(basename "${URL_WITHOUT_SUFFIX%/${REPO_NAME}}")
+
+            # if repo was cloned via ssh instead of https, remove the "git@github.com:" prefix to get the actual organization
+            if [[ ${REPO_ORGANIZATION} == *"@"* ]] && [[ ${REPO_ORGANIZATION} == *":"* ]]; then
+                REPO_ORGANIZATION=${REPO_ORGANIZATION#*:}
+            fi
         popd
         TOKEN=$(tail -n 1 "${CFDATA}/configurations/tokens.txt")
         # TODO: start date?
