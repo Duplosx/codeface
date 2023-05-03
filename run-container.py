@@ -135,6 +135,9 @@ CASESTUDIES = [
 #     "gogs",
 #     "mysql",
 #     "mariadb",
+#     "htop-original",
+#     "apache-openoffice",
+#     "libreoffice",
 
 ## GitHub issue data
 #     "angular",
