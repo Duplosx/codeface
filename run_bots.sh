@@ -65,9 +65,9 @@ pushd ${DIR} > /dev/null
         source "${BODEGHA}/bin/activate"
         pushd "${REPOS}/${CASESTUDY}/" > /dev/null
             URL=$(git remote get-url origin)
-            URL_WITHOUT_SUFFIX=${URL%.*}
-            REPO_NAME=$(basename ${URL%.*})
-            REPO_ORGANIZATION=$(basename "${URL_WITHOUT_SUFFIX%/${REPO_NAME}}")
+            REPO_NAME_WITH_POTENTIAL_SUFFIX=$(basename ${URL})
+            REPO_NAME=${REPO_NAME_WITH_POTENTIAL_SUFFIX%.*}
+            REPO_ORGANIZATION=$(basename $(dirname $URL))
 
             # if repo was cloned via ssh instead of https, remove the "git@github.com:" prefix to get the actual organization
             if [[ ${REPO_ORGANIZATION} == *"@"* ]] && [[ ${REPO_ORGANIZATION} == *":"* ]]; then
