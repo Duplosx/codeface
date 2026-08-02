@@ -403,7 +403,7 @@ class DBManager:
                           " does not match number of release tags!")
                 recreate_project = True
 
-            for i, (start, end, rc) in enumerate(self.doFetchAll()):
+            for i, (start, end, rc) in enumerate(ranges):
                 if i + 1 >= len(revs) or recreate_project:
                     # List of revisions to analyse was shortened
                     break

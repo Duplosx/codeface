@@ -78,7 +78,13 @@ def get_parser():
         help="Re-use an already existing vcs-analysis.db file. "
              "This flag is useful to continue a previously failed analysis"
              " or for debugging purposes.")
-
+    run_parser.add_argument(
+        '--all-files', action='store_true', dest="all_files",
+        help="Include all files touched by commits in the analysis, "
+             "bypassing the built-in source-file extension filter. "
+             "By default only known source-code extensions are included.") 
+    
+    
     ml_parser = sub_parser.add_parser('ml', help='Run mailing list analysis')
     ml_parser.set_defaults(func=cmd_ml)
     ml_parser.add_argument('-c', '--config', help="Codeface configuration file",
@@ -125,7 +131,8 @@ def cmd_run(args):
         logfile = os.path.abspath(logfile)
     project_analyse(resdir, gitdir, codeface_conf, project_conf,
                     args.no_report, args.loglevel, logfile, args.recreate,
-                    args.profile_r, args.jobs, args.tagging, args.reuse_db)
+                    args.profile_r, args.jobs, args.tagging, args.reuse_db,
+                    args.all_files)
     return 0
 
 def cmd_ml(args):

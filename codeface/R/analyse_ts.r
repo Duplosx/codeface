@@ -83,6 +83,7 @@ compute.next.timestamp <- function(time, last.time) {
 ## Take a list of commits and make their date indices unique by
 ## adding a one second offset to identical ones.
 make.index.unique <- function(dat, subset) {
+  if (nrow(dat) == 0) return (dat)
   dat$commitDate <- ymd_hms(dat$commitDate, quiet=TRUE)
   last.timestamp <- min(dat$commitDate) - dseconds(1)
 
@@ -111,6 +112,7 @@ gen.full.ts <- function(conf) {
   }
 
   for (i in 1:length(ts)) {
+    if (is.null(ts[[i]])) next
     ts[[i]]$ChangedLines <- ts[[i]]$AddedLines + ts[[i]]$DeletedLines
     full.series[[i]] <- na.omit(xts(ts[[i]]$ChangedLines,
                                     order.by=ts[[i]]$commitDate))
@@ -140,7 +142,6 @@ gen.rev.list <- function(revisions) {
 ## data point. Using the robust median instead of mean considerably
 ## reduces the amount of outliers
 process.ts <- function(series) {
-  duration <- end(series) - start(series)
 
   ## We compute the window lengths based on natural time units
   ## to avoid dependencies on the lifetime of the project, or on the
@@ -521,6 +522,10 @@ do.ts.analysis <- function(resdir, graphdir, conf) {
   ## Prepare the raw time series as input to the smoothing
   ## algorithms
   full.ts <- gen.full.ts(conf)
+  if (is.null(full.ts) || length(full.ts) == 0) {
+    logwarn("No commit data found for any release range; skipping time series analysis", logger = "analyse_ts")
+    return(invisible(NULL))
+  }
   series.merged <- process.ts(full.ts)
 
   ## Prepare y ranges for the different graph types

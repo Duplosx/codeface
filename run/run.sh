@@ -2,9 +2,9 @@
 
 # Source the run configuration
 echo "Source config"
-source run.conf
+source ../run.conf
 
-cd codeface
+#cd codeface
 
 # Start the id service
 echo "Start id service"

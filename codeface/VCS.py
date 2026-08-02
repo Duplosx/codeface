@@ -124,6 +124,9 @@ class VCS:
 
         # file names to include in analysis(non-taged based)
         self._fileNames = None
+        
+        # when True, skip the source-file extension filter in addFiles4Analysis
+        self._all_files = False
 
         self.subsys_description = {}
 
@@ -144,6 +147,9 @@ class VCS:
 
     def setFileNames(self, fileNames):
         self._fileNames = fileNames
+        
+    def setAllFiles(self, value):
+        self._all_files = value
 
     def getFileNames(self):
         return self._fileNames
@@ -887,6 +893,108 @@ class gitVCS(VCS):
         # can re-use the information in msg
         self._analyseCommitMsg(msg, cmt)
 
+
+    # MA - fixed broken sign-off extraction + extra trailing newline flating character count
+    # def _analyseCommitMsg(self, msg, cmt):
+    #     """Analyse the commit message."""
+    #     # The format we are analysing is the following:
+    #     ######
+    #     # commit db1f05bb85d7966b9176e293f3ceead1cb8b5d79
+    #     # Author: Author Name <author.name@email.tld>
+    #     # Date:   Wed Feb 10 12:15:53 2010 +0100
+    #     #
+    #     #     Headline of the commit
+    #     #
+    #     #     Body of the commit description. Note that the headline is
+    #     #     available only by convention, but not enforced, so we cannot
+    #     #     rely on it. The user-supplied message part always starts with
+    #     #     four spaces.
+    #     #
+    #     #     CC: J. Kernel Hacker <kernel.hacker@redhat.com>
+    #     #     Signed-off-by: Hans Huber <hans@hubercorp.com>
+    #     #     Signed-off-by: Friedrich Genscher <genscher@brd.gov>
+    #     #
+    #     # 8	1	path/to/file.c
+    #     # 2	0	path/to/another.c
+    #     #  2 files changed, 10 insertions(+), 1 deletions(-)
+    #     ######
+    #     # We get a list representation of the commit that was split
+    #     # by line breaks, so restore the original state first and then
+    #     # do a decomposition into parts
+        
+    #     parts = msg.split("\n\n")
+
+    #     # Find the chunk that contains the commit id (for 99.9% of all
+    #     # commits, this is chunk 0, but things are different for tags.
+    #     for i in range(0, len(parts)):
+    #         if parts[i].startswith("commit "):
+    #             break
+    #         elif i == len(parts) - 1:
+    #             # On some occasions, this
+    #             # error is triggered although the commit in question
+    #             # (e.g., 9d32c30542f9ec) can be parsed
+    #             # fine when viewed within a different range...?!
+    #             # Perhaps this is also a pypy issue. For the commit
+    #             # mentioned before, the problem was only detected with
+    #             # pypy, not with cpython.
+    #             log.critical("Cannot find metadata start in commit message!")
+    #             raise Error("Cannot find metadata start in commit message!")
+
+    #     commit_index = i
+    #     descr_index = i + 1
+
+    #     # Determine author and committer
+    #     for line in parts[commit_index].splitlines():
+    #         match = self.authorPattern.search(line)
+    #         if (match):
+    #             cmt.author = match.group(1)
+
+    #         match = self.committerPattern.search(line)
+    #         if (match):
+    #             cmt.committer = match.group(1)
+
+    #     # Check if the commit actually contains a description
+    #     if descr_index < len(parts):
+
+    #         descr = parts[descr_index].splitlines()
+
+    #         # Check if commit is corrective using key word search of description
+    #         cmt.checkIfCorrective(descr)
+
+    #         # Add commit description to commit object
+    #         cmt.setDescription(descr)
+
+    #         # Ensure that there are actually sign off tags in the commit message
+    #         signoff_index = None
+    #         for i, line in enumerate(descr):
+    #             stripped = line.lstrip()
+    #             if any(prefix.match(stripped) for prefix in self.signOffPatterns):
+    #                 signoff_index = i
+    #                 break
+                
+    #         if signoff_index is not None:
+    #             descr_message_lines = descr[:signoff_index]
+    #             self._analyseSignedOffs(descr[signoff_index:], cmt)
+    #         else:
+    #             descr_message_lines = descr
+
+    #         # Normalise the commit message
+    #         normalized_lines = [
+    #             re.sub("^    ", "", line) for line in descr_message_lines
+    #         ]
+            
+    #         final_message = "\n".join(normalized_lines)
+
+    #         cmt.commit_msg_info = (len(normalized_lines),
+    #                                len(final_message))
+    #     else:
+    #         # The commit does not contain a commit message
+    #         log.warning("The commit {0} does not contain a commit message.".
+    #                     format(cmt.id))
+    #         cmt.commit_msg_info = (0, 0)
+
+
+
     def _analyseCommitMsg(self, msg, cmt):
         """Analyse the commit message."""
         # The format we are analysing is the following:
@@ -913,7 +1021,6 @@ class gitVCS(VCS):
         # We get a list representation of the commit that was split
         # by line breaks, so restore the original state first and then
         # do a decomposition into parts
-
         parts = msg.split("\n\n")
 
         # Find the chunk that contains the commit id (for 99.9% of all
@@ -968,7 +1075,7 @@ class gitVCS(VCS):
 
             if found:
                 descr_message = "\n".join(parts[descr_index].
-                                          split("\n \n ")[0:i - 1])
+                                            split("\n \n ")[0:i - 1])
                 self._analyseSignedOffs(descr[i:], cmt)
             else:
                 descr_message = parts[descr_index]
@@ -980,12 +1087,15 @@ class gitVCS(VCS):
                 final_message += line + "\n"
 
             cmt.commit_msg_info = (len(final_message.split("\n")),
-                                   len(final_message))
+                                    len(final_message))
         else:
             # The commit does not contain a commit message
             log.warning("The commit {0} does not contain a commit message.".
                         format(cmt.id))
             cmt.commit_msg_info = (0, 0)
+
+
+
 
     def _analyseSignedOffs(self, msg, cmt):
         """Analyse the Signed-off-part of a commit message."""
@@ -1087,7 +1197,7 @@ class gitVCS(VCS):
         the blame message'''
 
         # build command string
-        cmd = 'git --git-dir={0} blame --encoding=UTF-8'.format(self.repo).split()
+        cmd = 'git --git-dir={0} blame --encoding=none'.format(self.repo).split()
         cmd.append("-p")  # format for machine consumption
         cmd.append("-w")  # ignore whitespace changes
         cmd.append("-C")  # find copied code (attribute to original)
@@ -1215,13 +1325,16 @@ class gitVCS(VCS):
                 # revision range
                 rev = self.rev_end
 
-            # Check if file has been deleted
+            # Check if file has been deleted or is a submodule (gitlink)
             cmd = "git --git-dir={0} ls-tree".format(self.repo).split()
-            cmd.append("--name-only")
             cmd.append("--full-tree")
             cmd.append("-r")
             cmd.append(rev)
-            existing_files = execute_command(cmd).split()
+            ls_tree_output = execute_command(cmd).splitlines()
+            # ls-tree output format: "<mode> <type> <hash>\t<filename>"
+            # Exclude gitlinks (mode 160000) which represent git submodules;
+            # git blame cannot be run on a submodule path.
+            existing_files = [line.split('\t',1)[1] for line in ls_tree_output if line and not line.startswith('160000')]
             if file_commit.filename in existing_files:
                 # retrieve blame data
                 if singleBlame:  # only one set of blame data per file
@@ -1391,6 +1504,12 @@ class gitVCS(VCS):
         except:
             log.critical("failure to load ctags file")
             raise Error("failure to load ctags file")
+        
+        
+        def as_text(value):
+            if isinstance(value, bytes):
+                return value.decode("utf-8", errors="replace")
+            return value
 
         # locate line numbers and structure names
         entry = TagEntry()
@@ -1434,15 +1553,19 @@ class gitVCS(VCS):
             structures = ["y", "r", "p"]
 
         while (tags.next(entry)):
-            if entry['kind'] in structures:
+            kind = as_text(entry['kind'])
+            name = as_text(entry['name'])
+            line_number = as_text(entry['lineNumber'])
+            
+            if kind in structures:
                 ## Ctags indexes starting at 1
-                line_num = int(entry['lineNumber']) - 1
+                line_num = int(line_number) - 1
 
                 ## Ctags sometimes assigns line numbers 0 in .js files
                 if line_num < 0:
                     line_num = 0
 
-                func_lines[line_num] = entry['name']
+                func_lines[line_num] = name
 
         # clean up temporary files
         tag_file.close()
@@ -1475,7 +1598,7 @@ class gitVCS(VCS):
         # and save it to a temporary location
         srcFile = tempfile.NamedTemporaryFile(suffix=fileExt)
         for line in file_layout_src:
-            srcFile.write(line)
+            srcFile.write(line.encode('utf-8'))
         srcFile.flush()
 
         # For certain programming languages we can use doxygen for a more
@@ -1557,22 +1680,25 @@ class gitVCS(VCS):
         cmd_base.append("-r")
 
         # get all files touched by all commits
-        all_files = set()
+        touched_files = set()
         for cmt_id in cmt_id_list:
             cmd = cmd_base + [cmt_id]
             cmt_files = execute_command(cmd).splitlines()
-            all_files.update(cmt_files)
+            touched_files.update(cmt_files)
 
-        # filter results to only get implementation files
-        fileExt = (".c", ".cc", ".cpp", ".cxx", ".cs", ".asmx", ".m", ".mm",
-                   ".js", ".coffee", ".java", ".j", ".jav", ".php", ".py", ".sh", ".ps1", ".rb",
-                   '.d', '.php4', '.php5', '.inc', '.phtml', '.m', '.mm', ".ada", ".erl", ".bb",
-                   '.f', '.for', '.f90', '.idl', '.ddl', '.odl', '.tcl', 'sql', ".q", ".exs", ".ex",
-                   ".ru", ".rs", ".ts", ".go", ".dart", ".r", ".rscript", ".vue",  # ".hs",
-                   ".pl", ".pm", ".swift", ".lua", ".scala", ".sc", ".lisp", ".lsp",  # ".feature",
-                   ".groovy", ".gy", ".gv", ".gvy", ".gsh", ".kt", ".kts", ".ktm", ".es6", ".jsm")
-        fileNames = [fileName for fileName in all_files if
-                     fileName.lower().endswith(fileExt)]
+        if self._all_files:
+            fileNames = list(touched_files)
+        else:
+            # filter results to only get implementation files
+            fileExt = (".c", ".cc", ".cpp", ".cxx", ".cs", ".asmx", ".m", ".mm",
+                    ".js", ".coffee", ".java", ".j", ".jav", ".php", ".py", ".sh", ".ps1", ".rb",
+                    '.d', '.php4', '.php5', '.inc', '.phtml', '.m', '.mm', ".ada", ".erl", ".bb",
+                    '.f', '.for', '.f90', '.idl', '.ddl', '.odl', '.tcl', 'sql', ".q", ".exs", ".ex",
+                    ".ru", ".rs", ".ts", ".go", ".dart", ".r", ".rscript", ".vue",  # ".hs",
+                    ".pl", ".pm", ".swift", ".lua", ".scala", ".sc", ".lisp", ".lsp",  # ".feature",
+                    ".groovy", ".gy", ".gv", ".gvy", ".gsh", ".kt", ".kts", ".ktm", ".es6", ".jsm")
+            fileNames = [fileName for fileName in touched_files if
+                        fileName.lower().endswith(fileExt)]
 
         self.setFileNames(fileNames)
 

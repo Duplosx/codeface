@@ -37,7 +37,8 @@ from time import sleep
 from threading import enumerate as threading_enumerate
 from queue import Empty
 from datetime import timedelta, datetime
-import ftfy
+from ftfy import fix_encoding
+from charset_normalizer import from_bytes
 
 # Represents a job submitted to the batch pool.
 BatchJobTuple = namedtuple('BatchJobTuple', ['id', 'func', 'args', 'kwargs',
@@ -242,6 +243,24 @@ signal.signal(signal.SIGTERM, handle_sigterm)
 # Also dump on sigusr1, but do not terminate
 signal.signal(signal.SIGUSR1, handle_sigusr1)
 
+
+# MA - Decode using UTF-8, falling back to iso-8859-2 and cp1250 if needed
+def decode_output(stdout):
+    if stdout is None:
+        return ""
+    
+    if isinstance(stdout, str):
+        return stdout
+    
+    try: 
+        return stdout.decode("utf-8")
+    except UnicodeDecodeError:
+        return "".join(
+            chr(b) if b < 128 else "<{:02X}>".format(b)
+            for b in stdout
+        )
+
+
 def execute_command(cmd, ignore_errors=False, direct_io=False, cwd=None, silent_errors=False):
     '''
     Execute the command `cmd` specified as a list of ['program', 'arg', ...]
@@ -259,6 +278,8 @@ def execute_command(cmd, ignore_errors=False, direct_io=False, cwd=None, silent_
         else:
             pipe = Popen(cmd, stdout=PIPE, stderr=PIPE, cwd=cwd)
         stdout, stderr = pipe.communicate()
+        stdout = decode_output(stdout)
+        stderr = decode_output(stderr)
     except OSError:
         log.error("Error executing command {}!".format(jcmd))
         raise
@@ -283,7 +304,7 @@ def execute_command(cmd, ignore_errors=False, direct_io=False, cwd=None, silent_
                 log.error(msg)
             raise Exception(msg)
     if stdout is not None:
-        return stdout.decode("utf-8", "ignore")
+        return decode_output(stdout)
 
     return ""
 
@@ -383,8 +404,8 @@ def generate_reports(start_rev, end_rev, range_resdir):
 
 def check4ctags():
     # check if the appropriate ctags is installed on the system
-    prog_name    = b'Universal Ctags'
-    prog_version = b'Universal Ctags 5.9.0, Copyright (C) 2015 Universal Ctags Team'
+    prog_name    = 'Universal Ctags'
+    prog_version = 'Universal Ctags 5.9.0, Copyright (C) 2015 Universal Ctags Team'
     cmd = "ctags-universal --version".split()
 
     res = execute_command(cmd, None)
@@ -530,8 +551,10 @@ def generate_analysis_windows(repo, window_size_months):
             end = start
             start = end + window_size_months
 
-        # Check if any commits occurred since the last analysis window
-        if rev_start[0] != revs[0]:
+        # Check if any commits occurred since the last analysis window.
+        # revs may be empty if no commit was found by the initial --before query
+        # (e.g. single-commit repo); treat that the same as a new entry.
+        if len(revs) == 0 or rev_start[0] != revs[0]:
             revs = rev_start + revs
         # else: no commit happened since last window, don't add duplicate
         #       revisions
@@ -541,18 +564,34 @@ def generate_analysis_windows(repo, window_size_months):
     # first commit does not carry the earliest commit date
     revs = [rev.split(",") for rev in revs]
     rev_len = len(revs)
-    if int(revs[0][1]) > int(revs[1][1]):
+    if len(revs) >= 2 and int(revs[0][1]) > int(revs[1][1]):
       del revs[0]
+      
+    if len(revs) < 2:
+        log.critical("The repository contains only a single commit. At least two commits are required for analysis.")
+        sys.exit(1)
+      
 
-    # Extract hash values and dates intro seperate lists
+    # Extract hash values and dates into separate lists
     revs_hash = [rev[0] for rev in revs]
     revs_date = [rev[2].split(" ")[0] for rev in revs]
 
-    # We cannot detect release canndidate tags in this analysis mode,
+    # We cannot detect release candidate tags in this analysis mode,
     # so provide a list with None entries
-    rcs = [None for x in range(len(revs))]
+    rcs = [None for x in range(len(revs_hash))]
 
     return revs_hash, rcs, revs_date
+
+def decode_legacy_byte_marker(match):
+    byte = bytes([int(match.group(1), 16)])
+    for encoding in ("iso-8859-2", "cp1250"):
+        try:
+            return byte.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    return match.group(0)
+
+
 
 
 def encode_as_utf8(string):
@@ -566,44 +605,46 @@ def encode_as_utf8(string):
     :param string: any string
     :return: the UTF-8 encoded string of type str
     """
-    return string.encode("utf-8", errors="ignore").decode("utf-8", errors="ignore")
+    
+    # Normalize to str first
+    if isinstance(string, bytes):
+        try:
+            text = string.decode("utf-8")
+        except UnicodeDecodeError:
+            text = string.decode("utf-8", errors="replace")
+    elif isinstance(string, str):
+        text = string
+    else:
+        # not string-like, return as-is
+        return string
 
-    # try:
-    #     string = string.decode("utf-8")
-    # except:
-    #     # if we have a string, we transform it to unicode
-    #     if isinstance(string, str):
-    #         string = str(string, "unicode-escape", errors="replace")
-    #
-    # ## maybe not a string/unicode at all, return rightaway
-    # if not isinstance(string, str):
-    #     return string
-    #
-    # # convert to real unicode-utf8 encoded string, fix_text ensures proper encoding
-    # new_string = ftfy.fix_encoding(string)
-    #
-    # # remove unicode characters from "Specials" block
-    # # see: https://www.compart.com/en/unicode/block/U+FFF0
-    # new_string = re.sub(r"\\ufff.", " ", new_string.encode("unicode-escape"))
-    #
-    # # remove all kinds of control characters and emojis
-    # # see: https://www.fileformat.info/info/unicode/category/index.htm
-    # new_string = "".join(ch if unicodedata.category(ch)[0] != "C" else " " for ch in new_string.decode("unicode-escape"))
-    #
-    # new_string = new_string.encode("utf-8")
-    #
-    # # replace any 4-byte characters with a single space (previously: four_byte_replacement)
-    # try:
-    #     # UCS-4 build
-    #     four_byte_regex = re.compile("[\U00010000-\U0010ffff]")
-    # except re.error:
-    #     # UCS-2 build
-    #     four_byte_regex = re.compile("[\uD800-\uDBFF][\uDC00-\uDFFF]")
-    #
-    # four_byte_replacement = r" "  # r":4bytereplacement:"
-    # new_string = four_byte_regex.sub(four_byte_replacement, new_string.decode("utf-8")).encode("utf-8")
-    #
-    # return str(new_string)
+    text = re.sub(r"(?<=[A-Za-z])<([0-9A-Fa-f]{2})>(?=[A-Za-z])", decode_legacy_byte_marker, text)
+    
+    # convert to real unicode-utf8 encoded string, fix_text ensures proper encoding
+    new_string = fix_encoding(text)
+
+    # remove unicode characters from "Specials" block
+    # see: https://www.compart.com/en/unicode/block/U+FFF0
+    new_string = re.sub(r"[\ufff0-\uffff]", " ", new_string)
+
+    # remove all kinds of control characters and emojis
+    # see: https://www.fileformat.info/info/unicode/category/index.htm
+    new_string = u"".join(ch if unicodedata.category(ch)[0] != "C" else " " for ch in new_string)
+
+    new_string = new_string.encode("utf-8")
+
+    # replace any 4-byte characters with a single space (previously: four_byte_replacement)
+    try:
+        # UCS-4 build
+        four_byte_regex = re.compile(u"[\U00010000-\U0010ffff]")
+    except re.error:
+        # UCS-2 build
+        four_byte_regex = re.compile(u"[\uD800-\uDBFF][\uDC00-\uDFFF]")
+
+    four_byte_replacement = r" "  # r":4bytereplacement:"
+    new_string = four_byte_regex.sub(four_byte_replacement, new_string.decode("utf-8")).encode("utf-8")
+
+    return new_string.decode("utf-8")
 
 
 def encode_items_as_utf8(items):

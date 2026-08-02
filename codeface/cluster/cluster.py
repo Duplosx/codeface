@@ -45,7 +45,7 @@ SEED = 448
 
 
 def createDB(filename, git_repo, revrange, subsys_descr, link_type,
-             range_by_date, rcranges=None):
+             range_by_date, rcranges=None, all_files=False):
     #------------------
     #configuration
     #------------------
@@ -54,6 +54,7 @@ def createDB(filename, git_repo, revrange, subsys_descr, link_type,
     git.setRevisionRange(revrange[0], revrange[1])
     git.setSubsysDescription(subsys_descr)
     git.setRangeByDate(range_by_date)
+    git.setAllFiles(all_files)
 
     if rcranges != None:
         git.setRCRanges(rcranges)
@@ -1237,7 +1238,7 @@ def writeDependsToDB(
                                 for indx, impl in enumerate(depend_impl_list)]
 
                 # construct rows to be put in DB
-                rows = [(key, file, encode_as_utf8(entityId), entity_type_current, count, impl)
+                rows = [(key, file, encode_as_utf8(entityId), entity_type_current, count, encode_as_utf8(impl))
                         for file, entityId, count, impl in depends_list]
                 cmt_depend_rows.extend(rows)
 
@@ -1851,7 +1852,7 @@ def performAnalysis(conf, dbm, dbfilename, git_repo, revrange, subsys_descr,
         log.devinfo("Creating data base for {0}..{1}".format(revrange[0],
                                                         revrange[1]))
         createDB(dbfilename, git_repo, revrange, subsys_descr, \
-                 link_type, range_by_date, rcranges)
+                 link_type, range_by_date, rcranges, all_files=conf.get("all_files", False))
     else:
         log.warning("REUSING data base for {0}..{1} "
                     "(make sure it is up to date)"

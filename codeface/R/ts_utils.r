@@ -20,7 +20,7 @@ suppressPackageStartupMessages(library(dtw))
 ## Omit time series elements that exceed the given range
 trim.series <- function(series, start, end) {
   series <- series[which(index(series) < end),]
-  series <- series[which(index(series) > start),]
+  series <- series[which(index(series) >= start),]
 
   return(series)
 }

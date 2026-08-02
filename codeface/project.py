@@ -54,7 +54,7 @@ def project_setup(conf, recreate):
 
 def project_analyse(resdir, gitdir, codeface_conf, project_conf,
                     no_report, loglevel, logfile, recreate, profile_r,
-                    n_jobs, tagging_type, reuse_db):
+                    n_jobs, tagging_type, reuse_db, all_files=False):
     pool = BatchJobPool(int(n_jobs))
     conf = Configuration.load(codeface_conf, project_conf)
     tagging = conf["tagging"]
@@ -74,6 +74,7 @@ def project_analyse(resdir, gitdir, codeface_conf, project_conf,
     repo = pathjoin(gitdir, conf["repo"], ".git")
     project_resdir = pathjoin(resdir, project, tagging)
     range_by_date = False
+    conf["all_files"] = all_files
 
     # When revisions are not provided by the configuration file
     # generate the analysis window automatically

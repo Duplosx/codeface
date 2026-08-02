@@ -45,14 +45,14 @@ class FileAnalysis:
         output_dir = 'OUTPUT_DIRECTORY=' + self.outdir
         cmd_1 = ['cat', self.conf]
         p1 = Popen(cmd_1 ,stdout=PIPE)
-        doxy_conf = p1.communicate()[0]
+        doxy_conf = p1.communicate()[0].decode('utf-8')
         doxy_conf = doxy_conf + input_file + '\n'
         doxy_conf = doxy_conf + output_dir
 
         cmd = 'doxygen -'
         cmd_2 = cmd.split()
         p2 = Popen(cmd_2, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        p2.stdin.write(doxy_conf)
+        p2.stdin.write(doxy_conf.encode('utf-8'))
         # On rare occasions, doxygen may 'hang' on input files, not delivering
         # any result. Use a timeout to work around such situations
         try:
