@@ -150,12 +150,65 @@ store.twomode.graph <- function(con, g, type, ml.id, range.id) {
 
 ## TODO: Do something with the sizes output of edgelist (which describes the weight
 ## of each keyword), for instance visualise the distribution as a sanity indicator
+centrality.edgelist.compat <- function(terms, apply.to, data.path,
+                                       max.terms=20) {
+  if (!(apply.to %in% c("subject", "content"))) {
+    stop("apply.to must be either 'subject' or 'content'")
+  }
+
+  edgelist <- NULL
+  sizes <- rep(0, length(terms))
+  network.dir <- file.path(data.path, "commnet.terms", apply.to)
+  filelist <- list.files(network.dir)
+
+  for (i in seq_along(terms)) {
+    network.file <- paste0("net_", terms[i], ".rda")
+    if (network.file %in% filelist) {
+      load(file.path(network.dir, network.file))
+      net <- sna::component.largest(net, result="graph", connected="weak")
+      if (!is.null(dim(net))) {
+        sizes[i] <- nrow(net)
+      }
+      rm(net)
+    }
+  }
+
+  max.terms <- min(max.terms, length(sizes))
+  selected <- head(order(sizes, decreasing=TRUE), max.terms)
+
+  for (i in selected) {
+    if (sizes[i] == 0) {
+      next
+    }
+
+    load(file.path(network.dir, paste0("net_", terms[i], ".rda")))
+    net <- sna::component.largest(net, result="graph", connected="weak")
+    authors <- rownames(net)
+    value <- sna::degree(net, cmode="outdegree")
+    value <- ordermatrix(cbind(authors, value), 2)
+
+    if (is.null(dim(value))) {
+      value <- matrix(value, nrow=1)
+    }
+
+    value <- cbind(value[, 1], seq_len(nrow(value))/nrow(value))
+    edgelist <- rbind(edgelist,
+                      cbind(value[, 1], terms[i], value[, 2]))
+  }
+
+  if (!is.null(edgelist)) {
+    dimnames(edgelist) <- list(NULL, c("author", "term", "outdegree"))
+  }
+
+  list(edgelist=edgelist, sizes=sizes)
+}
+
 gen.net <- function(type, termfreq, data.path, max.terms) {
   if (!(type %in% c("subject", "content"))) {
     stop ("Internal error: Unsupported type for gen.net!")
   }
 
-  res <- centrality.edgelist(termfreq, type, data.path, max.terms)
+  res <- centrality.edgelist.compat(termfreq, type, data.path, max.terms)
   if (!is.null(res$edgelist)) {
       adj.matrix <- adjacency(res$edgelist, mode="addvalues", directed=FALSE)
       return(list(edgelist=res$edgelist, adj.matrix=adj.matrix))

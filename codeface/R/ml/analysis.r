@@ -129,6 +129,31 @@ compute.commnet <- function(forest.corp, data.path) {
 ## basedir/<ml>/subject resp. /content
 ## Iterate over all terms in termfreq, and create the adjacency matrix
 ## for the communication network associated with each term
+extract.commnet.compat <- function(forest, terms, apply.to, data.path) {
+  if (!(apply.to %in% c("subject", "content"))) {
+    stop("apply.to must be either 'subject' or 'content'")
+  }
+
+  for (i in seq_along(terms)) {
+    if (apply.to == "subject") {
+      net <- createedges(forest, subjectfilter=terms[i])
+    } else {
+      net <- createedges(forest, contentfilter=terms[i])
+    }
+
+    if (is.null(net) || (length(net) == 1 && is.na(net))) {
+      next
+    }
+
+    if (nrow(net) > 0 &&
+        length(grep(terms[i], pattern="\001|\002|\003|\004|\005|\030|\bb|\037|\a|\021")) == 0) {
+      net <- adjacency(net)
+      save(net, file=file.path(data.path, "commnet.terms", apply.to,
+                               paste0("net_", terms[i], ".rda")))
+    }
+  }
+}
+
 extract.commnets <- function(forest.corp, termfreq, repo.path, data.path) {
   cont.dir <- file.path(data.path, "commnet.terms", "content")
   subj.dir <- file.path(data.path, "commnet.terms", "subject")
@@ -137,10 +162,10 @@ extract.commnets <- function(forest.corp, termfreq, repo.path, data.path) {
 
   if (doCompute) {
     gen.dir(cont.dir)
-    extract.commnet(forest.corp$forest, termfreq, "content", data.path)
+    extract.commnet.compat(forest.corp$forest, termfreq, "content", data.path)
 
     gen.dir(subj.dir)
-    extract.commnet(forest.corp$forest, termfreq, "subject", data.path)
+    extract.commnet.compat(forest.corp$forest, termfreq, "subject", data.path)
   }
 }
 
@@ -378,9 +403,19 @@ check.corpus.precon <- function(corp.base) {
 
     ## get the date header as inside the mbox file
     headers <- meta(doc, tag = "header")
-    date.header <- grep("^Date: ", headers, value = TRUE, useBytes = TRUE,
-                        ignore.case = TRUE)
+    date.header <- grep("^Date: ", headers, value = TRUE, useBytes = TRUE, ignore.case = TRUE)
     date.header <- gsub("^Date: ", "", date.header, ignore.case = TRUE)
+
+    # MA - tm.plugin.mail version 0.2.2 fix
+
+    # if (is.list(headers)) {
+    #   date.header <- unlist(headers[tolower(names(headers)) == "date"],
+    #                         use.names = FALSE)
+    # } else {
+    #   date.header <- grep("^Date: ", headers, value = TRUE, useBytes = TRUE,
+    #                       ignore.case = TRUE)
+    #   date.header <- gsub("^Date: ", "", date.header, ignore.case = TRUE)
+    # }
 
     ## break early if 'Date' header is missing
     if (length(date.header) == 0) {
@@ -421,9 +456,17 @@ check.corpus.precon <- function(corp.base) {
 
     ## store time offset (i.e., time zone) away from GMT
     if (!is.na(date.format.matching)) {
-        date.offset <- format(strptime(date.header, format = date.format.matching,
-                                       tz = ""), format = "%z")
-        date.offset <- as.integer(date.offset)
+      date.offset <- format(strptime(date.header, format = date.format.matching, tz = ""), format = "%z")
+      date.offset <- as.integer(date.offset)
+
+      # date.offset <- regmatches(date.header,
+      #                             regexpr("[+-][0-9]{4}(?=\\s*$)", date.header,
+      #                                     perl = TRUE))
+      #   if (length(date.offset) == 0) {
+      #     date.offset <- 0
+      #   } else {
+      #     date.offset <- as.integer(date.offset)
+      #   }
     } else {
         date.offset <- 0
     }

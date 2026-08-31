@@ -22,6 +22,7 @@ var yaml = require("js-yaml");
 var logger = require('./logger');
 var addressparser = require("addressparser");
 var bodyParser = require('body-parser');
+var libmime = require('libmime');
 
 // get property file name
 var fileName = process.argv[2];
@@ -539,7 +540,8 @@ app.postDecomposeUserID = function(request, response) {
     logger.log('info', request.body);
     var namestr = request.body.namestr;
     var projectID = request.body.projectID;
-    var parsed = addressparser(namestr)
+    var parsed = addressparser(namestr);
+    parsed[0].name = libmime.decodeWords(parsed[0].name);
 
     app.getUserFromDB(parsed[0].name, parsed[0].address, projectID, response);
 }
