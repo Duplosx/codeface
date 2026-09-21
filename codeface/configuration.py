@@ -85,7 +85,8 @@ class Configuration(Mapping):
     def _load(self, filename):
         '''Helper function that checks loading errors and logs them'''
         try:
-            return yaml.load(open(filename))
+            with open(filename) as config_file:
+                return yaml.safe_load(config_file)
         except IOError:
             log.exception("Could not open configuration file '{}'".
                     format(filename))

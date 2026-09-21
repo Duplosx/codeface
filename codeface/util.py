@@ -30,7 +30,7 @@ from collections import OrderedDict, namedtuple
 from glob import glob
 from math import sqrt
 from multiprocessing import Process, Queue, Lock
-import importlib_resources
+from importlib import resources as importlib_resources
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile, mkdtemp
 from time import sleep
