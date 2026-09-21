@@ -17,6 +17,9 @@
 ## Copyright 2016 by Wolfgang Mauerer <wolfgang.mauerer@oth-regensburg.de>
 ## All Rights Reserved.
 
+# arules-compat-fix: Use the private patched package only in Conway processes.
+suppressPackageStartupMessages(library(arules, lib.loc=".conway-library"))
+
 s <- suppressPackageStartupMessages
 s(library(ggplot2))
 s(library(igraph))
