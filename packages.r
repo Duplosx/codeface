@@ -59,16 +59,71 @@ if (is.na(num.cores)) {
 }
 
 ## install potentially unresolvable dependencies
-install.packages("devtools")
+if (!requireNamespace("devtools", quietly=TRUE)) {
+    install.packages("devtools")
+}
 library(devtools)
-devtools::install_url("https://cran.r-project.org/src/contrib/Archive/BH/BH_1.75.0-0.tar.gz")
-devtools::install_url("https://cran.r-project.org/src/contrib/Archive/slam/slam_0.1-40.tar.gz")
-devtools::install_url("https://cran.r-project.org/src/contrib/Archive/arules/arules_1.5-0.tar.gz")
-devtools::install_url("https://cran.r-project.org/src/contrib/Archive/proxy/proxy_0.4-16.tar.gz")
+
+pinned.packages <- c(
+    BH="https://cran.r-project.org/src/contrib/Archive/BH/BH_1.75.0-0.tar.gz",
+    slam="https://cran.r-project.org/src/contrib/Archive/slam/slam_0.1-40.tar.gz",
+    arules="https://cran.r-project.org/src/contrib/Archive/arules/arules_1.5-0.tar.gz",
+    proxy="https://cran.r-project.org/src/contrib/Archive/proxy/proxy_0.4-16.tar.gz",
+    logging="https://cran.r-project.org/src/contrib/Archive/logging/logging_0.8-104.tar.gz",
+    rjson="https://cran.r-project.org/src/contrib/Archive/rjson/rjson_0.2.20.tar.gz"
+)
+pinned.versions <- c(BH="1.75.0-0", slam="0.1-40", arules="1.5-0",
+                     proxy="0.4-16", logging="0.8-104", rjson="0.2.20")
+
+install.proxy.0.4.16 <- function(url) {
+    workdir <- tempfile("proxy-0.4-16-")
+    dir.create(workdir)
+    on.exit(unlink(workdir, recursive=TRUE), add=TRUE)
+    archive <- file.path(workdir, "proxy.tar.gz")
+    download.file(url, archive, mode="wb", quiet=TRUE)
+    untar(archive, exdir=workdir)
+    registry <- file.path(workdir, "proxy", "R", "registry.R")
+    code <- readLines(registry)
+    old <- "        if (!is.na(type) && !(is.character(type)))"
+    new <- "        if (!any(is.na(type)) && !(is.character(type)))"
+    matches <- which(code == old)
+    if (length(matches) != 1L) {
+        stop("proxy 0.4-16 compatibility patch no longer applies cleanly")
+    }
+    code[matches] <- new
+    writeLines(code, registry)
+    devtools::install_local(file.path(workdir, "proxy"), dependencies=FALSE,
+                            upgrade="never", force=TRUE, quiet=TRUE)
+}
+
+install.pinned.packages <- function() {
+    for (package in names(pinned.packages)) {
+        actual <- tryCatch(packageDescription(package)$Version,
+                           error=function(e) NA_character_)
+        if (!is.na(actual) && actual == pinned.versions[[package]]) {
+            next
+        }
+        if (package == "proxy") {
+            install.proxy.0.4.16(pinned.packages[[package]])
+        } else {
+            devtools::install_url(pinned.packages[[package]], dependencies=FALSE,
+                                  upgrade="never", force=TRUE, quiet=FALSE)
+        }
+        actual <- tryCatch(packageDescription(package)$Version,
+                           error=function(e) NA_character_)
+        if (is.na(actual) || actual != pinned.versions[[package]]) {
+            stop(sprintf("failed to install %s %s (found %s)", package,
+                         pinned.versions[[package]], actual))
+        }
+    }
+}
+
+# Some of these versions are needed while resolving the remaining packages.
+# Install them again at the end because CRAN/Bioconductor dependency handling
+# may otherwise replace them with current releases.
+install.pinned.packages()
 #devtools::install_url("https://cran.r-project.org/src/contrib/Archive/tm/tm_0.7-1.tar.gz")
-devtools::install_url("https://cran.r-project.org/src/contrib/Archive/logging/logging_0.8-104.tar.gz")
 #devtools::install_url("https://cran.r-project.org/src/contrib/Archive/markovchain/markovchain_0.6.9.11.tar.gz")
-devtools::install_url("https://cran.r-project.org/src/contrib/Archive/rjson/rjson_0.2.20.tar.gz")
 devtools::install_github("nathan-russell/hashmap")
 
 ## install from BioConductor
@@ -78,14 +133,14 @@ if(length(p) > 0) {
     #source("http://bioconductor.org/biocLite.R")
     #biocLite(p)
     install.packages("BiocManager")
-    BiocManager::install(p)
+    BiocManager::install(p, update=FALSE, ask=FALSE)
 }
 
 ## install from CRAN
 p <- filter.installed.packages(c("statnet", "tm", "optparse", "arules", "data.table", "plyr",
                                  "igraph", "zoo", "xts", "lubridate", "xtable", "ggplot2",
                                  "reshape", "wordnet", "stringr", "yaml", "ineq",
-                                 "scales", "gridExtra", "scales", "RMySQL", "svglite",
+                                 "scales", "gridExtra", "RMySQL", "svglite",
                                  "RCurl", "mgcv", "shiny", "dtw", "httpuv", "devtools",
                                  "corrgram", "logging", "png", "rjson", "lsa", "RJSONIO",
                                  "GGally", "corrplot", "psych", "markovchain", "hashmap"))
@@ -104,4 +159,7 @@ reinstall.package.from.github("shinybootstrap2", "rstudio/shinybootstrap2")
 ## Bioconductor packages
 #source("https://bioconductor.org/biocLite.R")
 #biocLite("Rgraphviz")
-BiocManager::install("Rgraphviz")
+BiocManager::install("Rgraphviz", update=FALSE, ask=FALSE)
+
+## Reassert Codeface's exact versions after every dependency has been installed.
+install.pinned.packages()

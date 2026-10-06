@@ -1,49 +1,151 @@
 # Installing and using Codeface
 
-## Installing Codeface
-The recommended way to set up a Codeface instance is via
-vagrant. Clone the repository and run
+## Contents
 
-	vagrant up
+1. [Docker Image](#1-docker-image)
+2. [Run docker container](#2-run-docker-container)
+3. [Configure Database](#3-configure-database)
+4. [Run Codeface analysis](#4-run-codeface-analysis)
+5. [Troubleshooting / Q&A](#5-troubleshooting--qa)
 
-to obtain a fully provisioned Codeface machine. Vagrant defaults to
-Virtualbox as provider, which may cause large performance impacts
-especially for I/O heavy tasks. You can /alternatively/ use
+## 1. Docker Image
 
-	vagrant up --provider=lxc
+### 1.1 Build from scratch
+Build from the repository root:
 
-if you have the corresponding LXC provider for vagrant installed on
-your system. To get shell access on the machine in each case, use
+```sh
+docker build -t codeface:image .
+```
 
-	vagrant ssh
 
-If vagrant is not yet installed on your system, please consult
-the corresponding [wiki page] (https://github.com/siemens/codeface/wiki/Runnning-codeface-with-Vagrant).
+### 1.2 Pull the existing image from Docker Hub
 
-## Analysing Projects
-### Concept
-Conceptually, work with Codeface is split in two stages:
+Download the public image:
+```sh
+sudo docker pull duplosx75/codeface:image
+```
 
-1. Analyse projects using the batch-mode command line interface. See
-  `analysis.md` for further details. Note that this process involves
-  substantial amounts of git repo querying and data crunching, and can
-  require several hours for large projects like the Linux kernel.
-2. Inspect the results by visual analysis with the web frontend (see
-  `webserver.md` for setup details), or by querying the database
-  directly. See file `codeface/R/interactive.R` for exemplary instructions.
 
-### Five Easy Steps to your First Analysis
-To perform an analysis of project qemu (a machine emulation software)
-and inspect the results in the interactive web frontend, run the
-following steps:
+## 2. Run Docker Container
 
-1. After bringing up the vagrant instance, `vagrant ssh` into the
-   virtual machine
-2. Start the ID service with `/vagrant/id_service/start_id_service.sh&`
-3. Run an analysis of qemu with `/vagrant/analysis_example.sh` (this process
-   may take a while to complete)
-4. Start the webserver with `cd vagrant; ./shiny-server.sh`
-5. Point your webserver on the host at [http://localhost:8081](http://localhost:8081)
+Then use this command from ~/codeface-project, mounting the current directory
 
-## Status
-- ![](https://travis-ci.org/siemens/codeface.svg?branch=master) on master
+```sh
+sudo docker run --rm -it \
+  --network host \
+  -v "$PWD:/workspace" \
+  -w /workspace/codeface \
+  --entrypoint /bin/bash \
+  codeface:image -i
+```
+
+## 3. Configure Database
+
+### 3.1 Configure local database 
+
+Inside the container, run:
+```sh
+CODEFACE_INSTALL_R_PACKAGES=0   bash install/install_codeface.sh --database local
+```
+
+
+### 3.2 Configure external database 
+Create database credentials for database:
+A working conf is already present in the repository - codeface/codeface.conf. If needed, change the following keys to run codeface using an external database.
+```yaml
+---
+# Database access information
+dbhost: <HOST>
+dbuser: <USER>
+dbpwd: <PASSWORD>
+dbname: <NAME>
+
+
+# PersonService Settings
+idServicePort: 8181
+idServiceHostname: localhost
+
+# Java BugExtractor Settings
+sleepTime: 1000
+# Specify proxyHost when no direct http connections are possible
+#proxyHost: proxy.host.tld
+proxyPort: 83
+```
+
+Inside the container, run:
+```bash
+bash install/verify_codeface.sh \
+  --db-config /workspace/external_db.conf
+```
+
+## 4. Run Codeface analysis
+
+### 4.1 Clone the repository you want to analyse.
+Inside the container, run:
+```sh
+mkdir -p /workspace/repos
+git clone https://github.com/apache/zeppelin.git \
+  /workspace/repos/zeppelin
+```
+
+### 4.2 Create configuration file (/workspace/zeppelin_proximity.conf) for the corresponding repository.
+
+```yaml
+project: zeppelin_proximity
+repo: zeppelin              # Source: git://git.apache.org/zeppelin.git
+description: Apache Zeppelin
+revisions: [ ]
+rcs: [ ]
+tagging: proximity
+windowSize: 3
+
+mailinglists:
+    - {name: apache-zeppelin-dev, type: dev, source: apache}
+
+issueTrackerType: jira
+issueTrackerProject: ZEPPELIN
+issueTrackerURL: https://issues.apache.org/jira
+issueTrackerUser: codeface
+issueTrackerPassword: codeface
+
+# Conway analysis settings
+artifactType: file
+dependencyType: co-change
+qualityType: defect
+communicationType: jira
+```
+
+### 4.3 Check `~/run.conf`
+`run/run.sh` reads `~/run.conf`. The default `~/run.conf` configuration (used for local database) is:
+
+```bash
+CFCONF="/workspace/codeface/codeface.conf"
+CSCONF="/workspace/zeppelin_proximity.conf"
+REPOS="/workspace/repos/"
+MAILINGLISTS="/workspace/mailinglists"
+RESULTS="/workspace/results"
+LOGS="/workspace/logs"
+TITAN="/workspace/codeface/titan"
+```
+
+When using an external database, set `CFCONF` to the external configuration
+used during installation, for example:
+
+```bash
+CFCONF="/workspace/external_db.conf"
+```
+
+### 4.4 Execute the Codeface workflow
+
+Inside the container, run:
+```sh
+mkdir -p /workspace/logs /workspace/results
+cd /workspace/codeface
+bash run/run.sh run
+```
+
+
+
+## 5. Troubleshooting / Q&A
+
+#### TODO
