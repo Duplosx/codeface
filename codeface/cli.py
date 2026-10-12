@@ -79,6 +79,10 @@ def get_parser():
              "This flag is useful to continue a previously failed analysis"
              " or for debugging purposes.")
     run_parser.add_argument(
+        '--incremental', action='store_true',
+        help="Skip successfully analysed ranges with unchanged settings. "
+             "Rebuild new, changed or incomplete ranges; refresh global summaries.")
+    run_parser.add_argument(
         '--all-files', action='store_true', dest="all_files",
         help="Include all files touched by commits in the analysis, "
              "bypassing the built-in source-file extension filter. "
@@ -132,7 +136,7 @@ def cmd_run(args):
     project_analyse(resdir, gitdir, codeface_conf, project_conf,
                     args.no_report, args.loglevel, logfile, args.recreate,
                     args.profile_r, args.jobs, args.tagging, args.reuse_db,
-                    args.all_files)
+                    args.all_files, args.incremental)
     return 0
 
 def cmd_ml(args):

@@ -45,7 +45,7 @@ BatchJobTuple = namedtuple('BatchJobTuple', ['id', 'func', 'args', 'kwargs',
         'deps', 'startmsg', 'endmsg'])
 class BatchJob(BatchJobTuple):
     def __init__(self, *args, **kwargs):
-        super(BatchJob, self).__init__(*args, **kwargs)
+        # namedtuple.__new__ already initializes the tuple's fields.
         self.done = False
         self.submitted = False
 
@@ -487,100 +487,48 @@ def get_analysis_windows(conf):
     if "numWindows" in list(conf.keys()):
         num_window = conf["numWindows"]
 
+    if num_window != -1 and (not isinstance(num_window, int) or num_window < 1):
+        raise ValueError("numWindows must be -1 (all windows) or a positive integer")
+
     return window_size_months, num_window
 
 def generate_analysis_windows(repo, window_size_months):
+    """Return chronological boundaries anchored at the earliest root commit.
+
+    A month remains 30 days for compatibility. Empty windows are collapsed,
+    and HEAD closes the final (possibly shorter) window.
     """
-    Generates a list of revisions (commit hash) in increments of the window_size
-    parameter. The window_size parameter specifies the number of months between
-    revisions. This function is useful when the git repository has no tags
-    referencing releases.
-    """
-    cmd_date = 'git --git-dir={0} show --format=%ad  --date=iso8601'\
-        .format(repo).split()
-    latest_date_result = execute_command(cmd_date).splitlines()[0]
-    latest_commit = parse_iso_git_date(latest_date_result)
+    if window_size_months <= 0:
+        raise ValueError("windowSize must be greater than zero")
 
-    cmd_root_commit_dates = 'git --git-dir={0} log --max-parents=0 --format=%ad  --date=iso8601'\
-        .format(repo).split()
-    root_commit_dates_result = execute_command(cmd_root_commit_dates).splitlines()
-    earliest_root_commit_date = min([parse_iso_git_date(root_commit) for root_commit in root_commit_dates_result])
+    cmd_base = ['git', '--git-dir=' + repo, 'log', '--format=%H,%ct,%ci']
+    latest = execute_command(cmd_base + ['--max-count=1', 'HEAD']).splitlines()[0]
+    roots = execute_command(cmd_base + ['--max-parents=0', 'HEAD']).splitlines()
+    earliest = min(roots, key=lambda rev: int(rev.split(',')[1]))
+    first_time = int(earliest.split(',')[1])
+    last_time = int(latest.split(',')[1])
+    step = timedelta(days=30 * window_size_months).total_seconds()
+    boundary = first_time + step
+    revs = [earliest]
 
-    print_fmt = "%Y-%m-%dT%H:%M:%S+0000"
-    month = timedelta(days=30)
+    while boundary < last_time:
+        before = datetime.utcfromtimestamp(boundary).strftime('%Y-%m-%dT%H:%M:%S+0000')
+        candidates = execute_command(cmd_base + [
+            '--no-merges', '--max-count=1', '--before=' + before, 'HEAD'
+        ]).splitlines()
+        if candidates and int(candidates[0].split(',')[1]) > int(revs[-1].split(',')[1]):
+            revs.append(candidates[0])
+        boundary += step
 
-    def get_before_arg(num_months):
-        date = latest_commit - num_months * month
+    if latest.split(',')[0] != revs[-1].split(',')[0]:
+        revs.append(latest)
+    if len(revs) < 2 or last_time < first_time:
+        raise ValueError("The repository must contain at least two commits with ordered boundary dates")
 
-        # Due to a bug in git, broken author information in commit objects can lead to a timestamp of 0 when using the
-        # --before option although the dates themselves are not broken and can be parsed without problems.
-        # For more details, see the whole thread conversation on the git mailing list here:
-        # https://lore.kernel.org/git/7728e059-d58d-cce7-c011-fbc16eb22fb9@cs.uni-saarland.de/
-        # To avoid running into an infinite while loop below (due to timestamps being 0), check if the date is earlier
-        # than the date of the earliest root commit and break if this is the case.
-        if date < earliest_root_commit_date:
-            raise ValueError("The before-arg date is earlier than the earliest commit in the repository.")
+    revs = [rev.split(',') for rev in revs]
+    return ([rev[0] for rev in revs], [None] * len(revs),
+            [rev[2].split(' ')[0] for rev in revs])
 
-        return '--before=' + date.strftime(print_fmt)
-
-    revs = []
-    start = window_size_months  # Window size time ago
-    end = 0  # Present time
-    cmd_base = 'git --git-dir={0} log --no-merges --format=%H,%ct,%ci'\
-        .format(repo).split()
-    cmd_base_max1 = cmd_base + ['--max-count=1']
-    cmd = cmd_base_max1 + [get_before_arg(end)]
-    rev_end = execute_command(cmd).splitlines()
-    revs.extend(rev_end)
-
-    while start != end:
-        try:
-            cmd = cmd_base_max1 + [get_before_arg(start)]
-            rev_start = execute_command(cmd).splitlines()
-        except ValueError as ve:
-            rev_start = []
-            log.info("rev_start would be earlier than earliest root commit. Start at initial commit instead...")
-
-        if len(rev_start) == 0:
-            start = end
-            #cmd = cmd_base + ['--reverse']
-            #rev_start = [execute_command(cmd).splitlines()[0]]
-            cmd = cmd_base + ['--max-parents=0']
-            rev_start = [execute_command(cmd).splitlines()[-1]]
-        else:
-            end = start
-            start = end + window_size_months
-
-        # Check if any commits occurred since the last analysis window.
-        # revs may be empty if no commit was found by the initial --before query
-        # (e.g. single-commit repo); treat that the same as a new entry.
-        if len(revs) == 0 or rev_start[0] != revs[0]:
-            revs = rev_start + revs
-        # else: no commit happened since last window, don't add duplicate
-        #       revisions
-    # End while
-
-    # Check that commit dates are monotonic, in some cases the earliest
-    # first commit does not carry the earliest commit date
-    revs = [rev.split(",") for rev in revs]
-    rev_len = len(revs)
-    if len(revs) >= 2 and int(revs[0][1]) > int(revs[1][1]):
-      del revs[0]
-      
-    if len(revs) < 2:
-        log.critical("The repository contains only a single commit. At least two commits are required for analysis.")
-        sys.exit(1)
-      
-
-    # Extract hash values and dates into separate lists
-    revs_hash = [rev[0] for rev in revs]
-    revs_date = [rev[2].split(" ")[0] for rev in revs]
-
-    # We cannot detect release candidate tags in this analysis mode,
-    # so provide a list with None entries
-    rcs = [None for x in range(len(revs_hash))]
-
-    return revs_hash, rcs, revs_date
 
 def decode_legacy_byte_marker(match):
     byte = bytes([int(match.group(1), 16)])
