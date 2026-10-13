@@ -1,12 +1,22 @@
-# Installing and using Codeface
-
 ## Contents
 
-1. [Docker Image](#1-docker-image)
-2. [Run docker container](#2-run-docker-container)
-3. [Configure Database](#3-configure-database)
-4. [Run Codeface analysis](#4-run-codeface-analysis)
-5. [Troubleshooting / Q&A](#5-troubleshooting--qa)
+- [Installing and using Codeface (Docker Guide) **Recommended**](#installing-and-using-codeface-docker-guide-recommended)
+    
+    1. [Docker Image](#1-docker-image)
+    2. [Run docker container](#2-run-docker-container)
+    3. [Configure Database](#3-configure-database)
+    4. [Run Codeface analysis](#4-run-codeface-analysis)
+
+- [Installing and using Codeface (Manual Guide)](#installing-and-using-codeface-manual-guide)
+
+    1. [Manual Installation](#1-manual-installation)
+
+- [Troubleshooting / Q&A](#5-troubleshooting--qa)
+
+
+
+# Installing and using Codeface (Docker Guide) **Recommended**
+Run Codeface in a reproducible containerized environment.
 
 ## 1. Docker Image
 
@@ -84,35 +94,30 @@ bash install/verify_codeface.sh \
 Inside the container, run:
 ```sh
 mkdir -p /workspace/repos
-git clone https://github.com/apache/zeppelin.git \
-  /workspace/repos/zeppelin
+git clone https://git.busybox.net/busybox/ \
+  /workspace/repos/busybox
 ```
 
-### 4.2 Create configuration file (/workspace/zeppelin_proximity.conf) for the corresponding repository.
+### 4.2 Create configuration file (/workspace/busybox_feature.conf) for the corresponding repository.
 
 ```yaml
-project: zeppelin_proximity
-repo: zeppelin              # Source: git://git.apache.org/zeppelin.git
-description: Apache Zeppelin
-revisions: [ ]
-rcs: [ ]
-tagging: proximity
-windowSize: 3
+# Repository: git://busybox.net/busybox.git
+---
+project: busybox_feature
+repo: busybox # Relative to git-dir as specified on the command line
+description: busybox
 
 mailinglists:
-    - {name: apache-zeppelin-dev, type: dev, source: apache}
+    -   name: gmane.linux.busybox
+        type: dev
+        source: gmane
 
-issueTrackerType: jira
-issueTrackerProject: ZEPPELIN
-issueTrackerURL: https://issues.apache.org/jira
-issueTrackerUser: codeface
-issueTrackerPassword: codeface
+# date of first release: Tue Oct 5 16:24:54 1999 +0000
+# 1999-10-05
+revisions: []
 
-# Conway analysis settings
-artifactType: file
-dependencyType: co-change
-qualityType: defect
-communicationType: jira
+
+tagging: feature
 ```
 
 ### 4.3 Check `~/run.conf`
@@ -120,7 +125,7 @@ communicationType: jira
 
 ```bash
 CFCONF="/workspace/codeface/codeface.conf"
-CSCONF="/workspace/zeppelin_proximity.conf"
+CSCONF="/workspace/busybox_feature.conf"
 REPOS="/workspace/repos/"
 MAILINGLISTS="/workspace/mailinglists"
 RESULTS="/workspace/results"
@@ -146,6 +151,29 @@ bash run/run.sh run
 
 
 
-## 5. Troubleshooting / Q&A
+
+# Installing and using Codeface (Manual Guide)
+Install Codeface and its dependencies directly on a Linux system.
+
+## 1. Manual Installation
+```sh
+cd codeface
+bash install/install_codeface.sh --database local
+source .venv/bin/activate
+```
+
+or for external database, run:
+
+```sh
+cd codeface
+bash install/install_codeface.sh --database external --db-config /path/to/external_db.conf.conf
+source .venv/bin/activate
+```
+
+Then, follow Step [3](#3-configure-database) & [4](#4-run-codeface-analysis), as shown in the Docker Guide.
+
+**Note**: The paths specified in Step [3](#3-configure-database) & [4](#4-run-codeface-analysis) are tailored to the Docker environment and must be adjusted to reflect the directory structure of a manual installation. 
+
+# Troubleshooting / Q&A
 
 #### TODO
