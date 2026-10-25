@@ -56,7 +56,8 @@ def project_setup(conf, recreate, allow_tail_change=False):
 
 def project_analyse(resdir, gitdir, codeface_conf, project_conf,
                     no_report, loglevel, logfile, recreate, profile_r,
-                    n_jobs, tagging_type, reuse_db, all_files=False, incremental=False):
+                    n_jobs, tagging_type, reuse_db, all_files=False, incremental=False,
+                    skip_identity_merging=False):
     pool = BatchJobPool(int(n_jobs))
     conf = Configuration.load(codeface_conf, project_conf)
     tagging = conf["tagging"]
@@ -77,6 +78,7 @@ def project_analyse(resdir, gitdir, codeface_conf, project_conf,
     project_resdir = pathjoin(resdir, project, tagging)
     range_by_date = False
     conf["all_files"] = all_files
+    conf["skip_identity_merging"] = skip_identity_merging
 
     # When revisions are not provided by the configuration file
     # generate the analysis window automatically
@@ -95,6 +97,8 @@ def project_analyse(resdir, gitdir, codeface_conf, project_conf,
         check4cppstats()
 
     project_id, dbm, all_range_ids = project_setup(conf, recreate, allow_tail_change=range_by_date)
+    if skip_identity_merging:
+        log.info("Using the ID service with identity merging disabled.")
 
     ## Save configuration file
     conf.write()

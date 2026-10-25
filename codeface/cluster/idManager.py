@@ -30,9 +30,8 @@ from ..util import encode_as_utf8
 class idManager:
     """Provide unique IDs for developers.
 
-    This class provides an interface to the REST id server. Heuristics to
-    detect developers who operate under multiple identities are included
-    in the server."""
+    Uses the REST ID server for lookups and inserts. Its identity-merging
+    heuristics can be disabled with skip_identity_merging."""
 
     def __init__(self, dbm, conf):
         self.subsys_names = []
@@ -52,6 +51,7 @@ class idManager:
 
         self._idMgrServer = conf["idServiceHostname"]
         self._idMgrPort = conf["idServicePort"]
+        self._skip_identity_merging = conf.get("skip_identity_merging", False)
         self._conn = http.client.HTTPConnection(self._idMgrServer, self._idMgrPort)
 
         # Create a project ID
@@ -121,9 +121,10 @@ class idManager:
         """Query the ID database for a contributor ID"""
 
         name = encode_as_utf8(name)
-        params = urllib.parse.urlencode({'projectID': self._projectID,
-                                   'name': name,
-                                   'email': email})
+        fields = {'projectID': self._projectID, 'name': name, 'email': email}
+        if self._skip_identity_merging:
+            fields['skipIdentityMerging'] = 'true'
+        params = urllib.parse.urlencode(fields)
 
         try:
             self._conn.request("POST", "/post_user_id", params, self.headers)

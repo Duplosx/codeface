@@ -71,6 +71,8 @@ def get_parser():
                         help="Skip LaTeX report generation (and dot compilation)")
     run_parser.add_argument('--recreate', action="store_true",
                         help="Force a delete of the project in the database")
+    run_parser.add_argument('--skip-identity-merging', action='store_true',
+                        help="Use the ID service without merging distinct name/email pairs")
     run_parser.add_argument('--profile-r', action="store_true",
                         help="Compute an execution time profile for R code")
     run_parser.add_argument(
@@ -136,7 +138,7 @@ def cmd_run(args):
     project_analyse(resdir, gitdir, codeface_conf, project_conf,
                     args.no_report, args.loglevel, logfile, args.recreate,
                     args.profile_r, args.jobs, args.tagging, args.reuse_db,
-                    args.all_files, args.incremental)
+                    args.all_files, args.incremental, args.skip_identity_merging)
     return 0
 
 def cmd_ml(args):
