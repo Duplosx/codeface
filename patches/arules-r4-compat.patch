@@ -1,0 +1,16 @@
+--- a/DESCRIPTION
++++ b/DESCRIPTION
+@@ -1,4 +1,4 @@
+ Package: arules
+-Version: 1.5-0
++Version: 1.5-0.1
+ Date: 2016-09-23
+ Title: Mining Association Rules and Frequent Itemsets
+--- a/R/itemMatrix.R
++++ b/R/itemMatrix.R
+@@ -168,3 +168,4 @@
+     p <- new("ngCMatrix", p   = c(0L, p),
+-      i   = c(i) - 1L,
++      # arules-compat-fix: R 4 preserves factors in c(); indices must be integers.
++      i   = as.integer(i) - 1L,
+       Dim = c(length(levels(i)), length(p)))
