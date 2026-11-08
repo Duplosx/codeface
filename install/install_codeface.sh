@@ -34,6 +34,8 @@ Options:
   -h, --help        Show this help.
 
 Set CODEFACE_SYSTEM_PYTHON=1 to install into system Python instead of a venv.
+cppstats (Duplosx/py3), NumPy, and srcML 1.1.0 are installed by default.
+Set CODEFACE_INSTALL_CPPSTATS=0 to skip these feature-analysis dependencies.
 EOF
 }
 
@@ -329,14 +331,26 @@ fi
 log "Installing the Node.js ID service"
 npm --prefix "${CODEFACE_DIR}/id_service" ci --no-audit --no-fund
 
-if [[ ${CODEFACE_INSTALL_CPPSTATS:-0} == 1 ]]; then
-    log "Installing cppstats"
-    readonly CPPSTATS_URL="https://github.com/nlschn/cppstats/archive/refs/tags/py3-complete.tar.gz"
+if [[ ${CODEFACE_INSTALL_CPPSTATS:-1} == 1 ]]; then
+    log "Installing cppstats, NumPy, and srcML 1.1.0"
+    readonly CPPSTATS_URL="https://github.com/Duplosx/cppstats/archive/refs/heads/py3.tar.gz"
+    readonly SRCML_VERSION="1.1.0"
+    srcml_arch="$(dpkg --print-architecture)"
+    case "${srcml_arch}" in
+        amd64|arm64) ;;
+        *) die "srcML ${SRCML_VERSION} requires amd64 or arm64; found ${srcml_arch}" ;;
+    esac
+    readonly SRCML_URL="https://github.com/srcML/srcML/releases/download/v${SRCML_VERSION}/srcml_${SRCML_VERSION}-1_ubuntu22.04_${srcml_arch}.deb"
     cppstats_tmp="$(mktemp -d)"
     trap 'rm -rf -- "${cppstats_tmp:-}" "${LOCAL_CONFIG_DIR:-}"' EXIT
+    curl --fail --location --retry 3 "${SRCML_URL}" -o "${cppstats_tmp}/srcml.deb"
+    "${SUDO[@]}" env DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        --no-install-recommends "${cppstats_tmp}/srcml.deb"
     curl --fail --location --retry 3 "${CPPSTATS_URL}" -o "${cppstats_tmp}/cppstats.tar.gz"
     tar -xzf "${cppstats_tmp}/cppstats.tar.gz" -C "${cppstats_tmp}"
-    "${PYTHON[@]}" -m pip install "${cppstats_tmp}/cppstats-py3-complete"
+    # Replace existing cppstats installations even when they also report 0.9.4.
+    "${PYTHON[@]}" -m pip install --force-reinstall numpy "${cppstats_tmp}/cppstats-py3"
+    srcml --version
     rm -rf -- "${cppstats_tmp}"
 fi
 

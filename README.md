@@ -1,17 +1,17 @@
 ## Contents
 
-- [Installing and using Codeface (Docker Guide) **Recommended**](#installing-and-using-codeface-docker-guide-recommended)
+1. [Installing and using Codeface (Docker Guide) **Recommended**](#installing-and-using-codeface-docker-guide-recommended)
     
-    1. [Docker Image](#1-docker-image)
-    2. [Run docker container](#2-run-docker-container)
-    3. [Configure Database](#3-configure-database)
-    4. [Run Codeface analysis](#4-run-codeface-analysis)
+    - [Docker Image](#1-docker-image)
+    - [Run docker container](#2-run-docker-container)
+    - [Configure Database](#3-configure-database)
+    - [Run Codeface analysis](#4-run-codeface-analysis)
 
-- [Installing and using Codeface (Manual Guide)](#installing-and-using-codeface-manual-guide)
+2. [Installing and using Codeface (Manual Guide)](#installing-and-using-codeface-manual-guide)
 
-    1. [Manual Installation](#1-manual-installation)
+    - [Manual Installation](#1-manual-installation)
 
-- [Troubleshooting / Q&A](#5-troubleshooting--qa)
+3. [Troubleshooting / Q&A](#5-troubleshooting--qa)
 
 
 
