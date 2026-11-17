@@ -11,7 +11,9 @@
 
     - [Manual Installation](#1-manual-installation)
 
-3. [Troubleshooting / Q&A](#5-troubleshooting--qa)
+3. [Available arguments](#available-arguments)
+
+4. [Troubleshooting / Q&A](#troubleshooting--qa)
 
 
 
@@ -173,6 +175,36 @@ source .venv/bin/activate
 Then, follow Step [3](#3-configure-database) & [4](#4-run-codeface-analysis), as shown in the Docker Guide.
 
 **Note**: The paths specified in Step [3](#3-configure-database) & [4](#4-run-codeface-analysis) are tailored to the Docker environment and must be adjusted to reflect the directory structure of a manual installation. 
+
+# Available arguments
+
+For repository analysis, with the ID service running:
+
+```sh
+codeface -j 4 run -c codeface.conf -p /workspace/busybox_feature.conf \
+  --incremental /workspace/results /workspace/repos
+```
+
+The final two arguments are the results directory and the parent directory
+containing the Git repositories.
+
+| Argument | Purpose |
+| --- | --- |
+| `-j N` | Parallel cores (default: `1`); place before `run`. |
+| `-c FILE` | Global configuration (default: `codeface.conf`). |
+| `-p FILE` | Required project configuration. |
+| `--incremental` | Skip completed, unchanged ranges. |
+| `--no-report` | Skip LaTeX reports and dot compilation. |
+| `--all-files` | Include files beyond the default source-code extensions. |
+| `--skip-identity-merging` | Keep distinct name/email pairs separate. |
+| `--recreate` | Delete existing project data in the database and rebuild. |
+
+For all options, use `codeface --help` or `codeface <command> --help`.
+Commands include `run`, `ml`, `conway`, `dynamic`, and `test`.
+
+`bash run/run.sh <command>` supports `run`, `ml`, and `conway`, and manages the
+ID service. It does not forward extra options; edit its CLI invocation to
+change them.
 
 # Troubleshooting / Q&A
 
